@@ -1,0 +1,17 @@
+export enum Events {
+    USER_REGISTERED = "user.registered",
+    USER_LOGIN = "user.login",
+    ORDER_COMPLETED = "order.completed",
+    ORDER_CANCELLED = "order.cancelled",
+    ORDER_UPDATED = "order.updated",
+    ORDER_CREATED = "order.created",
+    USER_DELETED = "user.deleted",
+    USER_UPDATED="user.updated",
+    USER_EMAIL_CHANGED="user.email.changed",
+    USER_PASSWORD_CHANGED="user.password.changed",
+    USER_ROLE_CHANGED="user.role.changed",
+    USER_COMPANY_CHANGED="user.company.changed",
+    USER_PHONE_CHANGED="user.phone.changed",
+    USER_ADDRESS_CHANGED="user.address.changed",
+    USER_NAME_CHANGED="user.name.changed",
+  }
