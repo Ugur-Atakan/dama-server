@@ -50,7 +50,7 @@ model FormTemplate {
 
 model FormQuestion {
   id             String        @id @default(uuid()) @db.Uuid
-  formTemplateId String
+  formTemplateId String         @db.Uuid  
   questionText   String
   answerType     String
   formTemplate   FormTemplate  @relation(fields: [formTemplateId], references: [id])
@@ -71,8 +71,8 @@ model FormSubmission {
 
 model Answer {
   id                String         @id @default(uuid()) @db.Uuid
-  formSubmissionId  String
-  formQuestionId    String
+  formSubmissionId  String        @db.Uuid
+  formQuestionId    String        @db.Uuid
   value             Json
   formSubmission    FormSubmission @relation(fields: [formSubmissionId], references: [id])
   formQuestion      FormQuestion   @relation(fields: [formQuestionId], references: [id])
@@ -85,8 +85,8 @@ model File {
   url               String
   uploadedAt        DateTime       @default(now())
   deletedAt    DateTime?
-  formSubmissionId  String?        
-  answerId          String?
+  formSubmissionId  String?        @db.Uuid 
+  answerId          String?       @db.Uuid
   formSubmission    FormSubmission?  @relation(fields: [formSubmissionId], references: [id])
   answer            Answer?          @relation(fields: [answerId], references: [id])
 }
