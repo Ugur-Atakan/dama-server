@@ -40,43 +40,6 @@ export class AdminUserController {
     };
   }
 
-  @ApiOperation({ summary: 'Belirtilen kullanıcı detaylarını getirir' })
-  @Roles('ADMIN')
-  @Get('users/:userId')
-  async getUser(@Param('userId') userId: string) {
-   return await this.userService.getUserDetails(userId);
-
-  }
-
- 
-  @ApiOperation({ summary: 'Belirtilen kullanıcı detaylarını getirir' })
-  @Roles('ADMIN')
-  @Get('users/:userId/uploaded-documents')
-  async getUserUploadedDocuments(@Param('userId') userId: string) {
-   return await this.userService.getUserUploadedDocuments(userId);
-
-  }
-  @ApiOperation({ summary: 'Belirtilen kullanıcı detaylarını getirir' })
-  @Roles('ADMIN')
-  @Get('users/:userId/companies')
-  async getUserCompanies(@Param('userId') userId: string) {
-   return await this.userService.getUserCompanies(userId);
-
-  }
-  @ApiOperation({ summary: 'Belirtilen kullanıcı detaylarını getirir' })
-  @Roles('ADMIN')
-  @Get('users/:userId/orders')
-  async getUserOrders(@Param('userId') userId: string) {
-   return await this.userService.getUserOrders(userId);
-  }
-
-
-  @ApiOperation({ summary: 'Belirtilen kullanıcı detaylarını getirir' })
-  @Roles('ADMIN')
-  @Get('users/:userId/tickets')
-  async getUserTickets(@Param('userId') userId: string) {
-   return await this.userService.getUserTickets(userId);
-  }
 
 
   @ApiOperation({ summary: 'Kullanıcı bilgilerini günceller' })

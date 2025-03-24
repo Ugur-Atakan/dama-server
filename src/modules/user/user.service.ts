@@ -4,29 +4,26 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { RoleType, User, CompanyUser } from '@prisma/client';
+import { RoleType, User, } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { v4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import {
   ChangeEmailDto,
-  LoginDto,
-  RegisterDto,
   UpdateUserDto,
 } from 'src/dtos/user.dto';
 import { SafeUser } from 'src/common/interfaces/safe-user.interface';
 import { isUUID } from 'class-validator';
-import { StripeService } from '../stripe/stripe.service';
+import { LoginDto, RegisterDto } from 'src/dtos/auth.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly stripeService: StripeService,
   ) {}
 
   private toSafeUser(
-    user: User & { roles: { role: RoleType }[] } & { companies: any[] },
+    user: User & { roles: { role: RoleType }[] },
   ): any {
     return {
       id: user.id,
@@ -41,19 +38,7 @@ export class UserService {
       loginProvider: user.loginProvider,
       createdAt: user.createdAt,
       telephone: user.telephone,
-      customerStripeID: user.customerStripeID,
       roles: user.roles.map((role) => role.role),
-      companies:
-        user.companies && user.companies.length > 0
-          ? user.companies.map((companyUser) => ({
-              companyName: companyUser.company.companyName,
-              companyId: companyUser.company.id,
-              role: companyUser.role,
-              createdAt: companyUser.company.createdAt,
-              state: companyUser.company.state.name,
-              status: companyUser.company.status,
-            }))
-          : [],
     };
   }
 
@@ -62,25 +47,18 @@ export class UserService {
       where: { email },
       include: {
         roles: true,
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: {
-                  select: {
-                    name: true,
-                  },
-                },
-                status: true,
-              },
-            },
-          },
-        },
       },
     });
+  }
+
+async getAllUsers(): Promise<SafeUser[]> {
+    const users = await this.prismaService.user.findMany({
+      where: { deletedAt: null },
+      include: {
+        roles: true,
+      },
+    });
+    return users.map((user) => this.toSafeUser(user));
   }
 
   async findUserByEmail(email: string): Promise<SafeUser> {
@@ -88,23 +66,6 @@ export class UserService {
       where: { email , deletedAt: null},
       include: {
         roles: true,
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: {
-                  select: {
-                    name: true,
-                  },
-                },
-                status: true,
-              },
-            },
-          },
-        },
       },
     });
     if (!user) {
@@ -119,19 +80,6 @@ export class UserService {
       where: { email, deletedAt: null },
       include: {
         roles: true,
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: { select: { name: true } },
-                status: true,
-              },
-            },
-          },
-        },
       },
     });
   
@@ -144,23 +92,6 @@ export class UserService {
       where: { id },
       include: {
         roles: true,
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: {
-                  select: {
-                    name: true,
-                  },
-                },
-                status: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -171,189 +102,6 @@ export class UserService {
     return this.toSafeUser(user);
   }
 
-  private formatUserCompanies(companies: any[]): any[] {
-    return companies.map((companyRecord) => ({
-      companyId: companyRecord.companyId,
-      companyName: companyRecord.company?.companyName || 'Unknown',
-      role: companyRecord.role,
-      createdAt: new Date(companyRecord.createdAt).toLocaleString(),
-      state: companyRecord.company?.state?.name || 'Unknown',
-      companyType: companyRecord.company?.companyType?.name || 'Unknown',
-      status: companyRecord.company?.status || 'Unknown',
-    }));
-  }
-
-  async getUserUploadedDocuments(userId: string): Promise<any[]> {
-    return await this.prismaService.document.findMany({
-      where: { uploadedById: userId },
-    });
-  }
-
-  async getUserCompanies(userId: string): Promise<any[]> {
-    const result = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: {
-                  select: {
-                    name: true,
-                  },
-                },
-                companyType: {
-                  select: {
-                    name: true,
-                  },
-                },
-                status: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    if (!result || !result.companies) return [];
-    return this.formatUserCompanies(result.companies);
-  }
-
-  // 3. Kullanıcının siparişlerini döndüren metod
-  async getUserOrders(userId: string): Promise<any[]> {
-    const userWithOrders = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        orders: {
-          select: {
-            id: true,
-            status: true,
-            amount: true,
-            currency: true,
-            stripeCheckoutSessionId: true,
-            createdAt: true,
-            companyId: true,
-            paymentMethod: true,
-            orderItems: {
-              include: {
-                product: {
-                  select: {
-                    id: true,
-                    name: true,
-                    stripeProductId: true,
-                    createdAt: true,
-                    description: true,
-                  },
-                },
-                price: {
-                  select: {
-                    id: true,
-                    unit_amount: true,
-                    currency: true,
-                    stripePriceId: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-    return userWithOrders?.orders || [];
-  }
-
-  // 4. Kullanıcının biletlerini döndüren metod
-  async getUserTickets(userId: string): Promise<any[]> {
-    const userWithTickets = await this.prismaService.user.findUnique({
-      where: { id: userId },
-      select: {
-        tickets: true,
-      },
-    });
-    return userWithTickets?.tickets || [];
-  }
-
-  // Ana metod: getUserDetails
-  async getUserDetails(userId: string): Promise<any> {
-    if (!isUUID(userId)) {
-      throw new HttpException('Invalid UUID', HttpStatus.BAD_REQUEST);
-    }
-
-    const [uploadedDocuments, companies, orders, tickets, user] =
-      await Promise.all([
-        this.getUserUploadedDocuments(userId),
-        this.getUserCompanies(userId),
-        this.getUserOrders(userId),
-        this.getUserTickets(userId),
-        this.prismaService.user.findUnique({
-          where: { id: userId },
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            profileImage: true,
-            emailConfirmed: true,
-            telephoneConfirmed: true,
-            notifications: true,
-            isActive: true,
-            loginProvider: true,
-            createdAt: true,
-            telephone: true,
-            customerStripeID: true,
-            roles: { select: { role: true } },
-          },
-        }),
-      ]);
-
-    if (!user) {
-      throw new HttpException('User Not Found', HttpStatus.NOT_FOUND);
-    }
-
-    // Şifre alanı zaten select edilmediği için delete etmeye gerek yok.
-    return {
-      ...user,
-      uploadedDocuments,
-      companies,
-      orders,
-      tickets,
-      roles: user.roles.map((r) => r.role),
-    };
-  }
-
-  async getAllUsers(includeDeleted: boolean = false): Promise<SafeUser[]> {
-    const users = await this.prismaService.user.findMany({
-      where: includeDeleted ? {} : { deletedAt: null },
-      include: {
-        roles: true,
-        companies: {
-          include: {
-            company: {
-              select: {
-                companyName: true,
-                id: true,
-                createdAt: true,
-                state: {
-                  select: {
-                    name: true,
-                  },
-                },
-                status: true,
-              },
-            },
-          },
-        },
-      },
-    });
-    const safeUsers = users.map((user) =>
-      this.toSafeUser(
-        user as User & { roles: { role: RoleType }[] } & { companies: any[] },
-      ),
-    );
-    return safeUsers;
-  }
 
   async createUser(userData: RegisterDto): Promise<SafeUser> {
     const user = await this.findOne(userData.email);
@@ -361,14 +109,8 @@ export class UserService {
       throw new HttpException('User already exists', HttpStatus.CONFLICT);
     }
     const hash = await this.hashPassword(userData.password);
-    const customerStripeID = (
-      await this.stripeService.createCustomer({
-        email: userData.email,
-        name: userData.firstName + ' ' + userData.lastName,
-      })
-    ).id;
     const newUser = await this.prismaService.user.create({
-      data: { ...userData, id: v4(), password: hash, customerStripeID } as any,
+      data: { ...userData, id: v4(), password: hash } as any,
       select: {
         email: true,
         firstName: true,
@@ -402,7 +144,7 @@ export class UserService {
       await this.prismaService.user.update({
         where: { id: userId },
         data: { email: data.newEmail },
-        include: { roles: true, companies: true },
+        include: { roles: true},
       });
     } catch (error) {
       throw new InternalServerErrorException('Email could not be updated');
@@ -410,20 +152,7 @@ export class UserService {
     return HttpStatus.OK;
   }
 
-  async createCustomerId(user) {
-    const customerStripeID = (
-      await this.stripeService.createCustomer({
-        email: user.email,
-        name: user.firstName + ' ' + user.lastName,
-      })
-    ).id;
-    this.prismaService.user.update({
-      where: { email: user.email },
-      data: { customerStripeID },
-    });
-    return customerStripeID;
-  }
-
+  
   async updateUser(userId: string, updateUserDto: UpdateUserDto) {
     const updateData = {
       ...updateUserDto,
@@ -431,7 +160,7 @@ export class UserService {
     const user = await this.prismaService.user.update({
       where: { id: userId },
       data: updateData,
-      include: { roles: true, companies: true },
+      include: { roles: true},
     });
 
     if (!user) {

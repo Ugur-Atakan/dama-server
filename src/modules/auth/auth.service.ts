@@ -5,14 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
-import { ChangePasswordDto, LoginDto, RegisterDto } from 'src/dtos/user.dto';
+import { ChangePasswordDto} from 'src/dtos/user.dto';
 import { TokenService } from './token.service';
-import { SafeUser } from 'src/common/interfaces/safe-user.interface';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events } from 'src/common/enums/event.enum';
 import { JwtService } from '@nestjs/jwt';
+import { LoginDto, RegisterDto } from 'src/dtos/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -55,16 +55,11 @@ export class AuthService {
     const accessToken = this.tokenService.generateAccessToken(user);
     const refreshToken = this.tokenService.generateRefreshToken(user);
 
-    // Eğer müşteri kimliği yoksa oluştur
-    let customerId = user.customerStripeID;
-    if (!customerId) {
-        customerId = await this.userService.createCustomerId(user);
-    }
 
     this.eventEmitter.emit(Events.USER_LOGIN, { email:user.email, name:user.firstName+' '+user.lastName });
 
     return {
-        user: { ...rest, customerStripeID: customerId },
+        user: { ...rest },
         tokens: {
             accessToken,
             refreshToken,

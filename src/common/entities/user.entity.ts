@@ -1,4 +1,3 @@
-// src/users/entities/user.entity.ts
 import { User as PrismaUser } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 
@@ -21,10 +20,9 @@ export class UserEntity implements PrismaUser {
   deletedAt: Date | null;
   isActive: boolean;
   loginProvider: any;
-  customerStripeID: string;
   enableToken: string;
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
   }
-
+  address: string;
 }

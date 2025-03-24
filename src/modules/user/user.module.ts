@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { StripeService } from '../stripe/stripe.service';
 
 @Module({
-  providers: [UserService,StripeService],
+  providers: [UserService],
   exports: [UserService],
   controllers: [UserController],
 })

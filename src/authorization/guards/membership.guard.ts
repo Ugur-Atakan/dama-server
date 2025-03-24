@@ -8,7 +8,7 @@ export class CompanyMembershipGuard implements CanActivate {
     const companyId = request.params.companyId;
     const currentUser = request.user;
 
-    if(currentUser.roles.some(role => role === RoleType.ADMIN|| role === RoleType.SUPERADMIN)) {
+    if(currentUser.roles.some(role => role === RoleType.ADMIN)) {
       return true;
     }else if (!currentUser.companies || !currentUser.companies.some(membership => membership.companyId === companyId)) {
       throw new ForbiddenException('You are not a allowed to access this resource');

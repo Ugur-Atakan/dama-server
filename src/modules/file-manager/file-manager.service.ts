@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma.service';
-import { CreateDocumentDto } from 'src/dtos/company.dto';
 
 @Injectable()
 export class FileManagerService {
@@ -92,23 +91,5 @@ export class FileManagerService {
     if (error) throw new Error(error.message);
     return { message: 'File deleted successfully' };
   }
-
-  /**
-   * Dosyayı veritabanına kaydeder
-   */
-  async createDocument(data: CreateDocumentDto) {
-    return await this.prismaService.document.create({
-      data: {
-        companyId: data.companyId,
-        uploadedById: data.uploadedById,
-        name: data.name,
-        key: data.key,
-        bucketName: data.bucketName,
-        link: data.link,
-        documentType: data.documentType,
-        fileType: data.fileType,
-        fromStaff: data.fromStaff ?? false,
-      },
-    });
-  }
+  
 }

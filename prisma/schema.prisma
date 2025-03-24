@@ -21,60 +21,99 @@ model User {
   isActive           Boolean       @default(true)
   loginProvider      LoginProvider @default(LOCAL)
   address            String?
-  tickets            Ticket[]
   roles              UserRole[]
-  taskMessage        TaskMessage[]
-  attachment         Attachment[]
   createdAt          DateTime      @default(now())
   deletedAt          DateTime?
-  task               Task[]
-  applications UserApplication[]
-  documents        Document[]
+  applications    Application[]
+  appointments       Appointment[]
 }
 
 model Application {
-  id        String            @id @default(uuid()) @db.Uuid
-  status    ApplicationStatus @default(PENDING)
-  users     UserApplication[]
-  documents Document[]
-  tickets   Ticket[]          @relation("ApplicationToTicket")
-  tasks     Task[]
-  createdAt DateTime          @default(now())
-  updatedAt DateTime?         @updatedAt
-  deletedAt DateTime?
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String?            @db.Uuid
+  user        User?              @relation(fields: [userId], references: [id])
+  status      ApplicationStatus @default(PENDING)
+  submissions FormSubmission[] // Kullanıcının doldurduğu formlar bu başvuru altında
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime?         @updatedAt
+  deletedAt   DateTime?
 }
 
-model UserApplication {
-  id            String      @id @default(uuid()) @db.Uuid
-  userId        String      @db.Uuid
-  applicationId String      @db.Uuid
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime    @default(now())
-  deletedAt     DateTime?
-  tasks          Task[]
-  documents      Document[]
-
-  @@unique([userId, applicationId])
+model FormTemplate {
+  id            String          @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?
+  questions     FormQuestion[]
+  createdAt     DateTime        @default(now())
+  formSubmission FormSubmission[]
 }
 
-model Document {
-  id           String          @id @default(uuid()) @db.Uuid
-  companyId    String          @default(uuid()) @db.Uuid
-  uploadedById String          @default(uuid()) @db.Uuid
-  name         String
-  key          String?
-  bucketName   String?
-  link         String?
-  documentType String?
-  fileType     String?
-  fromStaff    Boolean         @default(false)
-  application  UserApplication @relation(fields: [companyId], references: [id])
-  uploadedBy   User            @relation(fields: [uploadedById], references: [id])
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+model FormQuestion {
+  id             String        @id @default(uuid()) @db.Uuid
+  formTemplateId String
+  questionText   String
+  answerType     String
+  formTemplate   FormTemplate  @relation(fields: [formTemplateId], references: [id])
+  answers        Answer[]      // Bu satırı ekleyin - Answer modeliyle karşılıklı ilişki
+
+}
+
+model FormSubmission { 
+  id              String         @id @default(uuid()) @db.Uuid
+  applicationId   String         @db.Uuid
+  formTemplateId  String         @db.Uuid
+  submittedAt     DateTime       @default(now())
+  application     Application    @relation(fields: [applicationId], references: [id])
+  formTemplate    FormTemplate   @relation(fields: [formTemplateId], references: [id])
+  answers         Answer[]
+  files           File[]         // İsteğe bağlı form düzeyinde dosya yüklemeleri
+}
+
+model Answer {
+  id                String         @id @default(uuid()) @db.Uuid
+  formSubmissionId  String
+  formQuestionId    String
+  value             Json
+  formSubmission    FormSubmission @relation(fields: [formSubmissionId], references: [id])
+  formQuestion      FormQuestion   @relation(fields: [formQuestionId], references: [id])
+  files File[]
+}
+
+
+model File {
+  id                String         @id @default(uuid()) @db.Uuid
+  url               String
+  uploadedAt        DateTime       @default(now())
   deletedAt    DateTime?
-  applications Application[]
+  formSubmissionId  String?        
+  answerId          String?
+  formSubmission    FormSubmission?  @relation(fields: [formSubmissionId], references: [id])
+  answer            Answer?          @relation(fields: [answerId], references: [id])
+}
+
+model AppointmentType {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String        @unique
+  description  String?
+  duration     Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
+model Appointment {
+  id                String            @id @default(uuid()) @db.Uuid
+  startTime         DateTime
+  endTime           DateTime
+  status            AppointmentStatus @default(PENDING)
+  notes             String?
+  user              User              @relation(fields: [userId], references: [id])
+  userId            String            @db.Uuid
+  appointmentType   AppointmentType   @relation(fields: [appointmentTypeId], references: [id])
+  appointmentTypeId String            @db.Uuid
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
 }
 
 
@@ -83,44 +122,30 @@ model UserRole {
   userId    String   @default(uuid()) @db.Uuid
   role      RoleType
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id],onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions Permission[]
   @@unique([userId, role])
 }
 
+model Permission {
+  id            String           @id @default(uuid()) @db.Uuid
+  action        PermissionAction
+  subject       String // The resource type (e.g., "Document")
+  conditions    Json? // Optional conditions for the permission
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+  roles         UserRole[]       // Roles that have this permission
+  @@unique([action, subject])
+  @@map("permissions")
+}
+
 model Token {
-  id        String   @id @db.Uuid
+  id        String   @id @default(uuid()) @db.Uuid
   token     String   @unique
   createdAt DateTime @default(now())
   email     String
   expires   DateTime
-}
-
-model Ticket {
-  id          String          @id @default(uuid()) @db.Uuid
-  ticketNo    Int             @default(autoincrement())
-  userId      String          @db.Uuid
-  subject     String
-  category    String
-  status      TicketStatus    @default(OPEN)
-  priority    TicketPriority
-  attachments Attachment[]
-  isActivate  Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @default(now())
-  user        User            @relation(fields: [userId], references: [id])
-  messages    TicketMessage[]
-  application Application[] @relation("ApplicationToTicket")
-}
-
-model TicketMessage {
-  id          String       @id @default(uuid()) @db.Uuid
-  ticketId    String       @db.Uuid
-  userId      String       @db.Uuid
-  message     String
-  isStaff     Boolean
-  attachments Attachment[]
-  createdAt   DateTime     @default(now())
-  ticket      Ticket       @relation(fields: [ticketId], references: [id])
 }
 
 enum ApplicationStatus {
@@ -137,32 +162,13 @@ enum ApplicationStatus {
   DOCTOR_COMPLETED
 }
 
-enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-  REOPENED
-  ON_HOLD
-  WAITING_FOR_CUSTOMER
-  WAITING_FOR_STAFF
-  WAITING_FOR_THIRD_PARTY
-  ESCALATED
-  CANCELLED
-  CLOSED_BY_CUSTOMER
-}
-
-enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  VERY_HIGH
-}
 
 enum RoleType {
-  SUPERADMIN
+  APPLICANT
+  CLIENT
   ADMIN
   USER
+  OFFICER
 }
 
 enum PaymentMethod {
@@ -194,70 +200,6 @@ enum TaskStatus {
   CLOSED_BY_CUSTOMER
 }
 
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum TaskType {
-  GENERAL
-  LEGAL
-  ACCOUNTING
-  TAX
-  HR
-  OTHER
-}
-
-model Attachment {
-  id            String          @id @default(uuid()) @db.Uuid
-  name          String
-  url           String
-  type          String
-  uploadedById  String          @db.Uuid
-  uploadedBy    User            @relation(fields: [uploadedById], references: [id])
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  task          Task[]
-  taskMessage   TaskMessage[]
-  ticket        Ticket[]
-  ticketMessage TicketMessage[]
-}
-
-model Task {
-  id                  String          @id @default(uuid()) @db.Uuid
-  createdByUserId     String          @db.Uuid
-  title               String?
-  description         String?
-  messages            TaskMessage[]
-  Icon                String?
-  status              TaskStatus
-  priority            TaskPriority
-  type                TaskType
-  attachments         Attachment[]
-  applicationId       String          @db.Uuid
-  assignedApplication UserApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  createdBy           User            @relation(fields: [createdByUserId], references: [id])
-  dueDate             DateTime?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  completedAt         DateTime?
-  deletedAt           DateTime?
-  application Application[]
-}
-
-model TaskMessage {
-  id          String       @id @default(uuid()) @db.Uuid
-  taskId      String       @db.Uuid
-  userId      String       @db.Uuid
-  message     String
-  fromStaff   Boolean
-  createdAt   DateTime     @default(now())
-  task        Task         @relation(fields: [taskId], references: [id])
-  user        User         @relation(fields: [userId], references: [id])
-  attachments Attachment[]
-}
-
 enum PermissionAction {
   CREATE
   READ
@@ -266,16 +208,11 @@ enum PermissionAction {
   MANAGE
 }
 
-model Permission {
-  id            String           @id @default(uuid()) @db.Uuid
-  companyUserId String           @db.Uuid
-  action        PermissionAction
-  subject       String // The resource type (e.g., "Document")
-  conditions    Json? // Optional conditions for the permission
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  deletedAt     DateTime?
 
-  @@unique([companyUserId, action, subject])
-  @@map("permissions")
+// Randevu durumu için enum
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
