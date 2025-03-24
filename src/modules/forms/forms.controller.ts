@@ -1,10 +1,11 @@
-// src/forms/forms.controller.ts
+//src/modules/forms/forms.controller.ts
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { FormsService } from './forms.service';
 import { AnswerResponseDto, CreateAnswerDto, CreateFormQuestionDto, CreateFormTemplateDto, FormQuestionResponseDto, FormTemplateResponseDto, UpdateAnswerDto, UpdateFormQuestionDto, UpdateFormTemplateDto } from 'src/dtos/forms.dto';
 import { CreateFormSubmissionDto, FormSubmissionResponseDto, UpdateFormSubmissionDto } from 'src/dtos/form-submission.dto';
 import { CreateFileDto, FileResponseDto, UpdateFileDto } from 'src/dtos/file.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 
 @ApiTags('forms')
@@ -13,7 +14,7 @@ export class FormsController {
   constructor(private readonly formsService: FormsService) {}
 
   /*** FORM TEMPLATE ENDPOINTS ***/
-
+  @Public()
   @Post('templates')
   @ApiOperation({ summary: 'Yeni bir form şablonu oluştur' })
   @ApiResponse({ 
@@ -25,6 +26,7 @@ export class FormsController {
     return this.formsService.createTemplate(createFormTemplateDto);
   }
 
+  @Public()
   @Get('templates')
   @ApiOperation({ summary: 'Tüm form şablonlarını getir' })
   @ApiResponse({ 
@@ -35,7 +37,7 @@ export class FormsController {
   async findAllTemplates() {
     return this.formsService.findAllTemplates();
   }
-
+  @Public()
   @Get('templates/:id')
   @ApiOperation({ summary: 'ID\'ye göre form şablonu getir' })
   @ApiParam({ name: 'id', description: 'Form şablonu ID' })
@@ -52,6 +54,7 @@ export class FormsController {
     return this.formsService.findTemplateById(id);
   }
 
+  @Public()
   @Patch('templates/:id')
   @ApiOperation({ summary: 'Form şablonunu güncelle' })
   @ApiParam({ name: 'id', description: 'Form şablonu ID' })
@@ -71,6 +74,7 @@ export class FormsController {
     return this.formsService.updateTemplate(id, updateFormTemplateDto);
   }
 
+  @Public()
   @Delete('templates/:id')
   @ApiOperation({ summary: 'Form şablonunu sil' })
   @ApiParam({ name: 'id', description: 'Form şablonu ID' })
@@ -88,6 +92,7 @@ export class FormsController {
 
   /*** FORM SORU ENDPOINTS ***/
 
+  @Public()
   @Post('questions')
   @ApiOperation({ summary: 'Yeni bir form sorusu oluştur' })
   @ApiResponse({ 
@@ -99,6 +104,7 @@ export class FormsController {
     return this.formsService.createQuestion(createFormQuestionDto);
   }
 
+  @Public()
   @Get('templates/:templateId/questions')
   @ApiOperation({ summary: 'Form şablonu ID\'sine göre soruları getir' })
   @ApiParam({ name: 'templateId', description: 'Form şablonu ID' })
@@ -115,6 +121,7 @@ export class FormsController {
     return this.formsService.findQuestionsByTemplateId(templateId);
   }
 
+  @Public()
   @Get('questions/:id')
   @ApiOperation({ summary: 'ID\'ye göre form sorusu getir' })
   @ApiParam({ name: 'id', description: 'Form sorusu ID' })
@@ -131,6 +138,7 @@ export class FormsController {
     return this.formsService.findQuestionById(id);
   }
 
+  @Public()
   @Patch('questions/:id')
   @ApiOperation({ summary: 'Form sorusunu güncelle' })
   @ApiParam({ name: 'id', description: 'Form sorusu ID' })
@@ -150,6 +158,7 @@ export class FormsController {
     return this.formsService.updateQuestion(id, updateFormQuestionDto);
   }
 
+  @Public()
   @Delete('questions/:id')
   @ApiOperation({ summary: 'Form sorusunu sil' })
   @ApiParam({ name: 'id', description: 'Form sorusu ID' })
@@ -166,7 +175,7 @@ export class FormsController {
   }
 
   /*** FORM GÖNDERİM ENDPOINTS ***/
-
+  @Public()
   @Post('submissions')
   @ApiOperation({ summary: 'Yeni bir form gönderimi oluştur' })
   @ApiResponse({ 
@@ -182,6 +191,7 @@ export class FormsController {
     return this.formsService.createSubmission(createFormSubmissionDto);
   }
 
+  @Public()
   @Get('applications/:applicationId/submissions')
   @ApiOperation({ summary: 'Başvuru ID\'sine göre form gönderimlerini getir' })
   @ApiParam({ name: 'applicationId', description: 'Başvuru ID' })
@@ -198,6 +208,7 @@ export class FormsController {
     return this.formsService.findSubmissionsByApplicationId(applicationId);
   }
 
+  @Public()
   @Get('submissions/:id')
   @ApiOperation({ summary: 'ID\'ye göre form gönderimi getir' })
   @ApiParam({ name: 'id', description: 'Form gönderimi ID' })
@@ -214,7 +225,8 @@ export class FormsController {
     return this.formsService.findSubmissionById(id);
   }
 
-  @Patch('submissions/:id')
+@Public()
+@Patch('submissions/:id')
 @ApiOperation({ summary: 'Form gönderimini güncelle' })
 @ApiParam({ name: 'id', description: 'Form gönderimi ID' })
 @ApiResponse({ 
@@ -233,7 +245,7 @@ async updateSubmission(
   return this.formsService.updateSubmission(id, updateFormSubmissionDto);
 }
 
-
+@Public()
   @Delete('submissions/:id')
   @ApiOperation({ summary: 'Form gönderimini sil' })
   @ApiParam({ name: 'id', description: 'Form gönderimi ID' })
@@ -250,7 +262,7 @@ async updateSubmission(
   }
 
   /*** CEVAP ENDPOINTS ***/
-
+  @Public()
   @Post('answers')
   @ApiOperation({ summary: 'Yeni bir cevap oluştur' })
   @ApiResponse({ 
@@ -266,6 +278,7 @@ async updateSubmission(
     return this.formsService.createAnswer(createAnswerDto);
   }
 
+  @Public()
   @Get('submissions/:submissionId/answers')
   @ApiOperation({ summary: 'Form gönderimi ID\'sine göre cevapları getir' })
   @ApiParam({ name: 'submissionId', description: 'Form gönderimi ID' })
@@ -282,6 +295,7 @@ async updateSubmission(
     return this.formsService.findAnswersBySubmissionId(submissionId);
   }
 
+  @Public()
   @Get('answers/:id')
   @ApiOperation({ summary: 'ID\'ye göre cevap getir' })
   @ApiParam({ name: 'id', description: 'Cevap ID' })
@@ -298,6 +312,7 @@ async updateSubmission(
     return this.formsService.findAnswerById(id);
   }
 
+  @Public()
   @Patch('answers/:id')
   @ApiOperation({ summary: 'Cevabı güncelle' })
   @ApiParam({ name: 'id', description: 'Cevap ID' })
@@ -317,6 +332,7 @@ async updateSubmission(
     return this.formsService.updateAnswer(id, updateAnswerDto);
   }
 
+  @Public()
   @Delete('answers/:id')
   @ApiOperation({ summary: 'Cevabı sil' })
   @ApiParam({ name: 'id', description: 'Cevap ID' })
@@ -334,6 +350,7 @@ async updateSubmission(
 
   /*** DOSYA ENDPOINTS ***/
 
+  @Public()
   @Post('files')
   @ApiOperation({ summary: 'Yeni bir dosya oluştur' })
   @ApiResponse({ 
@@ -349,6 +366,7 @@ async updateSubmission(
     return this.formsService.createFile(createFileDto);
   }
 
+  @Public()
   @Get('files/:id')
   @ApiOperation({ summary: 'ID\'ye göre dosya getir' })
   @ApiParam({ name: 'id', description: 'Dosya ID' })
@@ -365,6 +383,7 @@ async updateSubmission(
     return this.formsService.findFileById(id);
   }
 
+  @Public()
   @Patch('files/:id')
   @ApiOperation({ summary: 'Dosyayı güncelle' })
   @ApiParam({ name: 'id', description: 'Dosya ID' })
@@ -384,6 +403,7 @@ async updateSubmission(
     return this.formsService.updateFile(id, updateFileDto);
   }
 
+  @Public()
   @Patch('files/:id/mark-deleted')
   @ApiOperation({ summary: 'Dosyayı silindi olarak işaretle' })
   @ApiParam({ name: 'id', description: 'Dosya ID' })
@@ -400,6 +420,7 @@ async updateSubmission(
     return this.formsService.markFileAsDeleted(id);
   }
 
+  @Public()
   @Delete('files/:id')
   @ApiOperation({ summary: 'Dosyayı sil' })
   @ApiParam({ name: 'id', description: 'Dosya ID' })
