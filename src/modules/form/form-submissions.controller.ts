@@ -5,12 +5,14 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiBearerAuth } 
 import { FormSubmissionsService } from './form-submissions.service';
 import { Request } from 'express';
 import { CreateFormSubmissionDto, FormSubmissionResponseDto } from 'src/dtos/form-submission.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('submissions')
 @Controller('forms/:formId/submissions')
 export class FormSubmissionsController {
   constructor(private readonly formSubmissionsService: FormSubmissionsService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Belirli bir form için tüm gönderileri listele' })
   @ApiParam({ name: 'formId', description: 'Form ID' })
@@ -24,6 +26,7 @@ export class FormSubmissionsController {
     return this.formSubmissionsService.findAll(formId);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Belirli bir form gönderimini getir' })
   @ApiParam({ name: 'formId', description: 'Form ID' })
@@ -38,6 +41,7 @@ export class FormSubmissionsController {
     return this.formSubmissionsService.findOne(id);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Yeni bir form gönderimi oluştur' })
   @ApiParam({ name: 'formId', description: 'Form ID' })

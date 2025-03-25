@@ -18,6 +18,7 @@ import { FileManagerService } from '../../file-manager/file-manager.service';
 import { validateAndTransform } from 'src/utils/validate';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Admin - User Management')
@@ -29,7 +30,7 @@ export class AdminUserController {
   ) {}
 
   @ApiOperation({ summary: 'Tüm kullanıcıları getirir' })
-  @Roles('ADMIN')
+  @Public()
   @Get('users')
   async getUsers() {
     const users = await this.userService.getAllUsers();
@@ -79,7 +80,7 @@ export class AdminUserController {
   }
 
   @ApiOperation({ summary: 'Kullanıcıyı siler' })
-  @Roles('ADMIN')
+  @Public()
   @Delete('users/:userId')
   async deleteUser(@Param('userId') userId: string) {
     await this.userService.deleteUser(userId);
@@ -90,7 +91,7 @@ export class AdminUserController {
   }
 
   @ApiOperation({ summary: 'Kullanıcı rollerini düzenler' })
-  @Roles('ADMIN')
+  @Public()
   @Post('users/:userId/edit-roles')
   editRoles(@Param('userId') userId: string, @Body() newRoles: RoleType[]) {
     const updatedUser = this.userService.editRoles(userId, newRoles);

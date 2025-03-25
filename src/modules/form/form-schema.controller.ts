@@ -3,12 +3,14 @@ import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { FormSchemaService } from './form-schema.service';
 import { FormSchemaDto } from 'src/dtos/form-schema.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('forms')
 @Controller('form-schemas')
 export class FormSchemaController {
   constructor(private readonly formSchemaService: FormSchemaService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Tüm form şemalarını listele' })
   @ApiResponse({ 
@@ -20,6 +22,7 @@ export class FormSchemaController {
     return this.formSchemaService.findAll();
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Belirli bir form şemasını getir' })
   @ApiParam({ name: 'id', description: 'Form Şema ID' })
@@ -33,6 +36,7 @@ export class FormSchemaController {
     return this.formSchemaService.findOne(id);
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Yeni bir form şeması oluştur' })
   @ApiResponse({ 
@@ -46,6 +50,7 @@ export class FormSchemaController {
     return this.formSchemaService.create(createFormSchemaDto);
   }
 
+  @Public()
   @Put(':id')
   @ApiOperation({ summary: 'Mevcut bir form şemasını güncelle' })
   @ApiParam({ name: 'id', description: 'Form Şema ID' })
@@ -61,6 +66,7 @@ export class FormSchemaController {
     return this.formSchemaService.update(id, updateFormSchemaDto);
   }
 
+  @Public()
   @Delete(':id')
   @ApiOperation({ summary: 'Bir form şemasını devre dışı bırak' })
   @ApiParam({ name: 'id', description: 'Form Şema ID' })
