@@ -34,16 +34,6 @@ export class RegisterDto {
   @IsString()
   @MinLength(6)
   password: string;
-
-  @ApiProperty({
-    description: 'The FCM ID for push notifications',
-    example: 'fcm_id_example_123',
-  })
-
-  @IsString()
-  @IsOptional()
-  fcmId?: string;
-
 }
 
 // Login DTO
@@ -63,13 +53,6 @@ export class LoginDto {
   @MinLength(6)
   password: string;
 
-  @ApiProperty({
-    description: 'The FCM ID for push notifications',
-    example: 'fcm_id_example_123',
-  })
-  @IsString()
-  @IsOptional()
-  fcmId?: string;
 }
 
 // Change Password DTO

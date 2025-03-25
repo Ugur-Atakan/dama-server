@@ -33,7 +33,7 @@ model Application {
   userId      String?           @db.Uuid
   user        User?             @relation(fields: [userId], references: [id])
   status      ApplicationStatus @default(PENDING)
-    submissions FormSubmission[]
+  submissions FormSubmission[]
   files       File[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime?         @updatedAt
@@ -45,7 +45,7 @@ model Application {
 // Form şemaları için model
 model FormSchema {
   id          String   @id @default(uuid()) @db.Uuid
-  formId      String   @unique
+  formId      String   @unique @db.Uuid
   title       String // JSON encoded object for multiple languages
   description String?  @db.Text // JSON encoded object for multiple languages
   schema      Json // Form şemasının tamamı JSON olarak saklanır
@@ -61,18 +61,16 @@ model FormSchema {
 
 // Form gönderimleri için model
 model FormSubmission {
-  id           String   @id @default(uuid()) @db.Uuid
-  formSchemaId String   @db.Uuid // formId yerine formSchemaId
-  data         Json // Form verisi JSON olarak saklanır
-  submittedBy  String? // Opsiyonel kullanıcı ID
-  applicationId  String?    @db.Uuid  // Application ile ilişki
-  application    Application? @relation(fields: [applicationId], references: [id])
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
+  id            String      @id @default(uuid()) @db.Uuid
+  formSchemaId  String      @db.Uuid
+  data          Json // Form verisi JSON olarak saklanır
+  submittedBy   String? // Opsiyonel kullanıcı ID
+  applicationId String      @db.Uuid // Application ile ilişki
+  application   Application @relation(fields: [applicationId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   // Form şemasına referans
-  formSchema FormSchema @relation(fields: [formSchemaId], references: [formId])
+  formSchema    FormSchema  @relation(fields: [formSchemaId], references: [formId])
 
   @@map("form_submissions")
 }
@@ -85,7 +83,7 @@ model File {
   size          Int
   formId        String
   questionId    String
-  applicationId String
+  applicationId String      @db.Uuid
   application   Application @relation(fields: [applicationId], references: [id])
   createdAt     DateTime    @default(now())
 }
@@ -154,6 +152,7 @@ enum ApplicationStatus {
   ACTIVE
   INACTIVE
   INPROGRESS
+  COMPLETED
   APPROVED
   REJECTED
   DOCTOR_APPROVAL
