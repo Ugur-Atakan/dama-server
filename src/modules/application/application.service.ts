@@ -1,56 +1,137 @@
 import { PrismaService } from 'src/prisma.service';
-import { Injectable } from '@nestjs/common';
-import { ApplicationStatus } from '@prisma/client';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+function generateApplicationNumber(): string {
+  const randomNumber = Math.floor(10000000 + Math.random() * 900000).toString();
+  return `APP-${randomNumber}`;
+}
 
 @Injectable()
 export class ApplicationService {
-  constructor(
-    private readonly prisma: PrismaService
-  ) {}
-  
-  async getApplicationByUser(userId: string) {
-    // Kullanıcının draft durumundaki başvurusunu bul veya yeni oluştur
-    const application = await this.prisma.application.findFirst({
-      where: { userId: userId},
-      include: { files: true }
+  constructor(private readonly prisma: PrismaService) {}
+
+  async updateApplicatorData(data: any) {
+    await this.prisma.applicator.update({
+      where: { id: data.id },
+      data,
     });
-    return application;
   }
-    
-  async finalizeApplication(id: string) {
-    const application = await this.prisma.application.update({
-      where: { id },
+
+  async createApplicationForVerifiedPhone(telephone: string) {
+    // İlgili telefonla kayıtlı bir Applicator var mı kontrol ediyoruz.
+    let applicator = await this.prisma.applicator.findUnique({
+      where: { telephone },
+    });
+
+    if (!applicator) {
+      // Eğer yoksa, minimal bilgileriyle yeni bir Applicator oluşturuyoruz.
+      applicator = await this.prisma.applicator.create({
+        data: {
+          telephone,
+          // Diğer alanlar varsa (örneğin name, email, birthDate) ekleyebilirsin.
+          status: 'APPLICATOR', // Varsayılan durum
+        },
+      });
+    }
+
+    const applicationNumber = generateApplicationNumber();
+
+    // Yeni başvuru kaydını oluşturuyoruz.
+    const newApplication = await this.prisma.application.create({
       data: {
-        status: ApplicationStatus.ACTIVE,
-        updatedAt: new Date()
+        applicatorId: applicator.id,
+        applicationNumber,
+        status: 'PENDING', // İstersen başlangıç statüsü olarak PRE_APPLICATION da seçebilirsin.
+        preApplicationData: [], // Başlangıçta boş array
+        applicationData: [], // Başlangıçta boş array
       },
-      include: { files: true }
     });
-    
-    return application;
+
+    return newApplication;
+  }
+  async getAllApplications() {
+    return await this.prisma.application.findMany({
+      select: {
+        id: true,
+        applicationNumber: true,
+        preApplicationData: true,
+        applicationData: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
-  
-  async createApplication(data) {
-    return await this.prisma.application.create({ data });
+  async getApplicationWithForms(applicationId: string) {
+    // İlgili application'ı çekiyoruz.
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      select: {
+        id: true,
+        applicationNumber: true,
+        preApplicationData: true,
+        applicationData: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    // preApplicationData ve applicationData'nın array olduğunu varsayıyoruz.
+    // Eğer veri yoksa boş array döndürüyoruz.
+    const preForms = Array.isArray(application.preApplicationData)
+      ? application.preApplicationData
+      : [];
+    const appForms = Array.isArray(application.applicationData)
+      ? application.applicationData
+      : [];
+
+    // İki array'i birleştiriyoruz.
+    const forms = [...preForms, ...appForms];
+
+    // Front-end'e döneceğimiz response'a "forms" property'sini ekliyoruz.
+    return {
+      ...application,
+      forms,
+    };
   }
 
-  async findAll() {
-    return await this.prisma.application.findMany();
-  }
+  async updatePreApplicationSection(
+    applicationId: string,
+    section: string,
+    newData: any,
+  ) {
+    // Uygulamanın mevcut preApplicationData'sını getiriyoruz
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
 
-  async findOne(id: string) {
-    return await this.prisma.application.findUnique({ where: { id } });
-  }
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
 
-  async update(id: string, data) {
-    return await this.prisma.application.update({ where: { id }, data: data });
-  }
+    // Varsayıyoruz ki preApplicationData JSONB sütunu olarak array şeklinde saklanıyor
+    const preApplicationData =
+      (application.preApplicationData as Array<{
+        section: string;
+        step: number;
+        data: any;
+      }>) || [];
 
- async  delete(id: string) {
-    return await this.prisma.application.update({ where: { id }, data: { deletedAt: new Date() } });
-  }
-  async hardDelete(id: string) {
-    return await this.prisma.application.delete({ where: { id } });
+    // İlgili section'ı bulup, data'sını güncelliyoruz
+    const updatedPreApplicationData = preApplicationData.map((item) =>
+      item.section === section ? { ...item, data: newData } : item,
+    );
+
+    // Güncellenmiş array'i veritabanında update ediyoruz
+    const updatedApplication = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { preApplicationData: updatedPreApplicationData },
+    });
+
+    return updatedApplication;
   }
 }

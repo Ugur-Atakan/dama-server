@@ -8,109 +8,79 @@ datasource db {
 }
 
 model User {
-  id                 String        @id @default(uuid()) @db.Uuid
-  email              String        @unique
+  id                 String     @id @default(uuid()) @db.Uuid
+  email              String?
   password           String
   firstName          String
-  lastName           String?
+  lastName           String
   telephone          String?
   profileImage       String?
-  notifications      Boolean       @default(true)
-  emailConfirmed     Boolean       @default(false)
-  telephoneConfirmed Boolean       @default(false)
-  isActive           Boolean       @default(true)
-  loginProvider      LoginProvider @default(LOCAL)
+  notifications      Boolean    @default(true)
+  emailConfirmed     Boolean    @default(false)
+  telephoneConfirmed Boolean    @default(false)
+  isActive           Boolean    @default(true)
   address            String?
   roles              UserRole[]
-  createdAt          DateTime      @default(now())
+  createdAt          DateTime   @default(now())
   deletedAt          DateTime?
-  applications       Application[]
-  appointments       Appointment[]
 }
 
-model Application {
-  id          String            @id @default(uuid()) @db.Uuid
-  userId      String?           @db.Uuid
-  user        User?             @relation(fields: [userId], references: [id])
-  status      ApplicationStatus @default(PENDING)
-  submissions FormSubmission[]
-  files       File[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime?         @updatedAt
-  deletedAt   DateTime?
-
-  @@unique([userId, id])
-}
-
-// Form şemaları için model
-model FormSchema {
-  id          String   @id @default(uuid()) @db.Uuid
-  formId      String   @unique @db.Uuid
-  title       String // JSON encoded object for multiple languages
-  description String?  @db.Text // JSON encoded object for multiple languages
-  schema      Json // Form şemasının tamamı JSON olarak saklanır
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Form şemasına ait gönderimler için ilişki
-  submissions FormSubmission[]
-
-  @@map("form_schemas")
-}
-
-// Form gönderimleri için model
-model FormSubmission {
-  id            String      @id @default(uuid()) @db.Uuid
-  formSchemaId  String      @db.Uuid
-  data          Json // Form verisi JSON olarak saklanır
-  submittedBy   String? // Opsiyonel kullanıcı ID
-  applicationId String      @db.Uuid // Application ile ilişki
-  application   Application @relation(fields: [applicationId], references: [id])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  // Form şemasına referans
-  formSchema    FormSchema  @relation(fields: [formSchemaId], references: [formId])
-
-  @@map("form_submissions")
-}
-
-model File {
-  id            String      @id @default(uuid())
-  originalName  String
-  path          String
-  mimeType      String
-  size          Int
-  formId        String
-  questionId    String
-  applicationId String      @db.Uuid
-  application   Application @relation(fields: [applicationId], references: [id])
-  createdAt     DateTime    @default(now())
-}
-
-model AppointmentType {
-  id           String        @id @default(uuid()) @db.Uuid
-  name         String        @unique
-  description  String?
-  duration     Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+model Applicator {
+  id           String           @id @default(uuid()) @db.Uuid
+  telephone    String           @unique
+  firstName         String?
+  lastName      String?
+  email        String?
+  birthDate    DateTime?
+  address      String?
+  status       ApplicatorStatus @default(WAITING_COMFIRMATION)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+  applications Application[]
   appointments Appointment[]
 }
 
+model Application {
+  id                 String            @id @default(uuid()) @db.Uuid
+  applicatorId       String?           @db.Uuid
+  applicator         Applicator?       @relation(fields: [applicatorId], references: [id], onDelete: Cascade)
+  status             ApplicationStatus @default(PENDING)
+  applicationNumber  String            @unique
+  preApplicationData Json? // Pre-application form verileri (array şeklinde saklanabilir)
+  applicationData    Json? // Application form verileri (array şeklinde saklanabilir)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime?         @updatedAt
+  deletedAt          DateTime?
+  @@unique([applicatorId, id])
+}
+
+model PreApplicationField {
+  id          String @id @default(uuid())
+  section     String
+  step        Int
+  defaultData Json?
+}
+
+model ApplicationField {
+  id          String @id @default(uuid())
+  section     String
+  step        Int
+  defaultData Json?
+}
+
 model Appointment {
-  id                String            @id @default(uuid()) @db.Uuid
-  startTime         DateTime
-  endTime           DateTime
-  status            AppointmentStatus @default(PENDING)
-  notes             String?
-  user              User              @relation(fields: [userId], references: [id])
-  userId            String            @db.Uuid
-  appointmentType   AppointmentType   @relation(fields: [appointmentTypeId], references: [id])
-  appointmentTypeId String            @db.Uuid
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  deletedAt         DateTime?
+  id              String            @id @default(uuid()) @db.Uuid
+  startTime       DateTime
+  endTime         DateTime
+  status          AppointmentStatus @default(PENDING)
+  notes           String?
+  applicatorId    String?           @db.Uuid
+  applicator      Applicator?       @relation(fields: [applicatorId], references: [id], onDelete: Cascade)
+  appointmentType AppointmentType   @default(ONLINE)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  deletedAt       DateTime?
 }
 
 model UserRole {
@@ -146,6 +116,14 @@ model Token {
   expires   DateTime
 }
 
+model OTPToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  telephone     String  @unique
+  expire    DateTime
+  createdAt DateTime @default(now())
+}
+
 enum ApplicationStatus {
   PRE_APPLICATION
   PENDING
@@ -162,41 +140,27 @@ enum ApplicationStatus {
   DOCTOR_COMPLETED
 }
 
-enum RoleType {
-  APPLICANT
+enum ApplicatorStatus {
+  WAITING_COMFIRMATION
+  APPLICATOR
   CLIENT
+  ACTIVE
+  INPROGRESS
+  COMPLETED
+  PAYMENT_APPROVED
+  PAYMENT_REJECTED
+  DOCTOR_PENDING
+  DOCTOR_APPROVAL
+  DOCTOR_REJECTION
+  DOCTOR_INPROGRESS
+  DOCTOR_COMPLETED
+}
+
+enum RoleType {
+  LAWYER
   ADMIN
   USER
   OFFICER
-}
-
-enum PaymentMethod {
-  BANK_TRANSFER
-  CREDIT_CARD
-  CRYPTO
-  CASH
-  OTHER
-}
-
-enum LoginProvider {
-  LOCAL
-  GOOGLE
-}
-
-enum TaskStatus {
-  OPEN
-  IN_PROGRESS
-  COMPLETED
-  RESOLVED
-  CLOSED
-  REOPENED
-  ON_HOLD
-  WAITING_FOR_CUSTOMER
-  WAITING_FOR_STAFF
-  WAITING_FOR_THIRD_PARTY
-  ESCALATED
-  CANCELLED
-  CLOSED_BY_CUSTOMER
 }
 
 enum PermissionAction {
@@ -213,4 +177,10 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+
+enum AppointmentType {
+  ONLINE
+  INOFFICE
 }

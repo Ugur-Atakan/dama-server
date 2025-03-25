@@ -20,6 +20,7 @@ import { PasswordResetService } from './reset.service';
 import { EmailVerifyService } from './verify.service';
 import { TokenService } from './token.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { OTPService } from './otp.service';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -29,8 +30,22 @@ export class AuthController {
     private readonly passwordResetService: PasswordResetService,
     private readonly tokenService: TokenService,
     private readonly emailVerifyService: EmailVerifyService,
+    private readonly otpService: OTPService
   ) {}
   
+
+  @Post('generate')
+  async generateOTP(@Body('telephone') telephone: string) {
+    const otp = await this.otpService.generateOTPToken(telephone);
+    return { message: 'OTP oluşturuldu', otp };
+  }
+
+  @Post('verify')
+  async verifyOTP(@Body() body: { telephone: string; token: string }) {
+    await this.otpService.verifyOTPToken(body.telephone, body.token);
+    return { message: 'OTP doğrulandı' };
+  }
+
 
   @Public()
   @Get('redirect-link')

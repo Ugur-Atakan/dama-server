@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailVerifyService } from './verify.service';
 import { PasswordResetService } from './reset.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OTPService } from './otp.service';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
   ],
-  providers: [AuthService, TokenService,JwtStrategy,EmailVerifyService,PasswordResetService],
+  providers: [AuthService, TokenService,JwtStrategy,EmailVerifyService,PasswordResetService,OTPService],
   controllers: [AuthController],
 })
 export class AuthModule {}

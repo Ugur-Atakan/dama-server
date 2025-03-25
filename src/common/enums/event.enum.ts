@@ -14,4 +14,7 @@ export enum Events {
     USER_PHONE_CHANGED="user.phone.changed",
     USER_ADDRESS_CHANGED="user.address.changed",
     USER_NAME_CHANGED="user.name.changed",
+    OTP_REQUESTED="otp.requested",
+    OTP_VERIFIED="otp.verified",
+    OTP_EXPIRED="otp.expired",
   }
