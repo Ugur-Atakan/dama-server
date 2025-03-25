@@ -35,7 +35,6 @@ export class UserService {
       telephoneConfirmed: user.telephoneConfirmed,
       notifications: user.notifications,
       isActive: user.isActive,
-      loginProvider: user.loginProvider,
       createdAt: user.createdAt,
       telephone: user.telephone,
       roles: user.roles.map((role) => role.role),

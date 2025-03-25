@@ -1,4 +1,4 @@
-  import {  LoginProvider, UserRole } from '@prisma/client';
+  import {UserRole } from '@prisma/client';
 
   export interface SafeUser {
     id: string;
@@ -12,6 +12,5 @@
     telephoneConfirmed: boolean;
     roles: UserRole[]; // Kullanıcı birden fazla role sahip olabileceği için Role[] olarak ayarladık
     isActive: boolean;
-    loginProvider: LoginProvider;
     createdAt: Date;
   }

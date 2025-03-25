@@ -9,15 +9,15 @@ import { PrismaModule } from 'src/prisma.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CaslModule } from 'src/authorization/casl/casl.module';
 import { AppointmentModule } from './appointment/appointment.module';
-import { FormSchemaModule } from './form/form-schema.module';
-import { FormSubmissionsModule } from './form/form-submissions.module';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
+import { ApplicationModule } from './application/application.module';
 
 
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
     AppointmentModule,
+    ApplicationModule,
     CaslModule,
     PrismaModule,
     AuthModule,
@@ -26,8 +26,6 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     MailModule,
     AdminModule,
     HttpModule,
-    FormSchemaModule,
-    FormSubmissionsModule,
     WhatsAppModule,
   ],
   exports: [
