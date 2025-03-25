@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Appointment, AppointmentStatus } from '@prisma/client';
 import { CreateAppointmentDto } from 'src/dtos/appointment.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -10,21 +14,12 @@ export class AppointmentService {
   async create(
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<Appointment> {
-    // Randevu tipi bilgisini alalım (süre için)
-    const appointmentType = await this.prisma.appointmentType.findUnique({
-      where: { id: createAppointmentDto.appointmentTypeId },
-    });
-
-    if (!appointmentType) {
-      throw new NotFoundException(`Appointment type with ID ${createAppointmentDto.appointmentTypeId} not found`);
-    }
-
     // Başlangıç zamanını Date objesine çevirelim
     const startTime = new Date(createAppointmentDto.startTime);
 
     // Bitiş zamanını hesaplayalım (başlangıç + süre)
     const endTime = new Date(startTime);
-    endTime.setMinutes(endTime.getMinutes() + appointmentType.duration);
+    endTime.setMinutes(endTime.getMinutes());
 
     // Çakışan randevu var mı kontrol edelim
     const conflictingAppointment = await this.prisma.appointment.findFirst({
@@ -51,8 +46,8 @@ export class AppointmentService {
       data: {
         startTime,
         endTime,
-        userId: createAppointmentDto.userId,
-        appointmentTypeId: createAppointmentDto.appointmentTypeId,
+        applicatorId: createAppointmentDto.userId,
+        appointmentType: createAppointmentDto.appointmentType,
         notes: createAppointmentDto.notes,
       },
     });
@@ -61,8 +56,7 @@ export class AppointmentService {
   async findAll(): Promise<Appointment[]> {
     return this.prisma.appointment.findMany({
       include: {
-        user: true,
-        appointmentType: true,
+        applicator: true,
       },
     });
   }
@@ -71,8 +65,7 @@ export class AppointmentService {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
       include: {
-        user: true,
-        appointmentType: true,
+        applicator: true,
       },
     });
 
@@ -89,17 +82,6 @@ export class AppointmentService {
     const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
 
-    // Randevu tipi bilgisini alalım (süre için)
-    const appointmentType = await this.prisma.appointmentType.findUnique({
-      where: { id: appointmentTypeId },
-    });
-
-    if (!appointmentType) {
-      throw new NotFoundException(
-        `Appointment type with ID ${appointmentTypeId} not found`,
-      );
-    }
-
     // O gün için mevcut randevuları alalım
     const existingAppointments = await this.prisma.appointment.findMany({
       where: {
@@ -115,7 +97,6 @@ export class AppointmentService {
     // Çalışma saatlerini belirleyelim (örn: 09:00 - 17:00)
     const workingHoursStart = 9; // 09:00
     const workingHoursEnd = 17; // 17:00
-    const slotDuration = appointmentType.duration; // Dakika cinsinden
 
     // Müsait zaman dilimlerini hesaplayalım
     const availableSlots = [];
@@ -124,7 +105,7 @@ export class AppointmentService {
 
     while (currentTime.getHours() < workingHoursEnd) {
       const slotEndTime = new Date(currentTime);
-      slotEndTime.setMinutes(slotEndTime.getMinutes() + slotDuration);
+      slotEndTime.setMinutes(slotEndTime.getMinutes());
 
       // Çalışma saati dışına taşıyor mu kontrol edelim
       if (slotEndTime.getHours() > workingHoursEnd) {
@@ -146,7 +127,7 @@ export class AppointmentService {
       }
 
       // Bir sonraki zaman dilimine geçelim
-      currentTime.setMinutes(currentTime.getMinutes() + slotDuration);
+      currentTime.setMinutes(currentTime.getMinutes());
     }
 
     return availableSlots;

@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsDateString, IsInt, IsString, IsOptional } from 'class-validator';
+import { AppointmentType } from '@prisma/client';
+import { IsNotEmpty, IsDateString, IsString, IsOptional, IsEnum } from 'class-validator';
 
 export class CreateAppointmentDto {
     @IsNotEmpty()
@@ -7,7 +8,8 @@ export class CreateAppointmentDto {
     
     @IsNotEmpty()
     @IsString()
-    appointmentTypeId: string;
+    @IsEnum(['ONLINE', 'OFFLINE'])
+    appointmentType:AppointmentType ;
     
     @IsNotEmpty()
     @IsString()
@@ -16,15 +18,4 @@ export class CreateAppointmentDto {
     @IsOptional()
     @IsString()
     notes?: string;
-  }
-
-
-  export class appointmentTypeDto {
-    @IsNotEmpty()
-    @IsString()
-    name: string;
-    
-    @IsNotEmpty()
-    @IsInt()
-    duration: number;
   }

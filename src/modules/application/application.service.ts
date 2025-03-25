@@ -134,4 +134,42 @@ export class ApplicationService {
 
     return updatedApplication;
   }
+
+
+  async updateApplicationSection(
+    applicationId: string,
+    section: string,
+    newData: any,
+  ) {
+    // Uygulamanın mevcut applicationData'sını getiriyoruz
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+  
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+  
+    // Varsayıyoruz ki applicationData JSONB sütunu olarak array şeklinde saklanıyor
+    const applicationData =
+      (application.applicationData as Array<{
+        section: string;
+        step: number;
+        data: any;
+      }>) || [];
+  
+    // İlgili section'ı bulup, data'sını güncelliyoruz
+    const updatedApplicationData = applicationData.map((item) =>
+      item.section === section ? { ...item, data: newData } : item,
+    );
+  
+    // Güncellenmiş array'i veritabanında update ediyoruz
+    const updatedApplication = await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { applicationData: updatedApplicationData },
+    });
+  
+    return updatedApplication;
+  }
+  
 }
