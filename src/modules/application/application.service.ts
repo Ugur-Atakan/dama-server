@@ -1,10 +1,36 @@
-import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
+import { Injectable } from '@nestjs/common';
+import { ApplicationStatus } from '@prisma/client';
 
 @Injectable()
 export class ApplicationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService
+  ) {}
+  
+  async getApplicationByUser(userId: string) {
+    // Kullanıcının draft durumundaki başvurusunu bul veya yeni oluştur
+    const application = await this.prisma.application.findFirst({
+      where: { userId: userId},
+      include: { files: true }
+    });
+    return application;
+  }
+    
+  async finalizeApplication(id: string) {
+    const application = await this.prisma.application.update({
+      where: { id },
+      data: {
+        status: ApplicationStatus.ACTIVE,
+        updatedAt: new Date()
+      },
+      include: { files: true }
+    });
+    
+    return application;
+  }
 
+  
   async createApplication(data) {
     return await this.prisma.application.create({ data });
   }

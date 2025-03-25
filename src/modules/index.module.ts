@@ -9,8 +9,8 @@ import { PrismaModule } from 'src/prisma.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CaslModule } from 'src/authorization/casl/casl.module';
 import { AppointmentModule } from './appointment/appointment.module';
-import { FormsService } from './forms/forms.service';
-import { FormsModule } from './forms/forms.module';
+import { FormSchemaModule } from './form/form-schema.module';
+import { FormSubmissionsModule } from './form/form-submissions.module';
 
 
 @Module({
@@ -25,7 +25,8 @@ import { FormsModule } from './forms/forms.module';
     MailModule,
     AdminModule,
     HttpModule,
-    FormsModule
+    FormSchemaModule,
+    FormSubmissionsModule
   ],
   exports: [
     AuthModule,
@@ -33,7 +34,6 @@ import { FormsModule } from './forms/forms.module';
     FileManagerModule,
     MailModule,
     AdminModule,
-    FormsModule
   ],
 })
 export class MainModule {}

@@ -30,4 +30,13 @@ export class PrismaService
     this.logger.log('PrismaService Shutting Down');
     await this.$disconnect();
   }
+
+  async healthCheck() {
+    try {
+      await this.$queryRaw`SELECT 1`;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
