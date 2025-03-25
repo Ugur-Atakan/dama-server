@@ -11,6 +11,7 @@ import { CaslModule } from 'src/authorization/casl/casl.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { FormSchemaModule } from './form/form-schema.module';
 import { FormSubmissionsModule } from './form/form-submissions.module';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 
 @Module({
@@ -26,7 +27,8 @@ import { FormSubmissionsModule } from './form/form-submissions.module';
     AdminModule,
     HttpModule,
     FormSchemaModule,
-    FormSubmissionsModule
+    FormSubmissionsModule,
+    WhatsAppModule,
   ],
   exports: [
     AuthModule,

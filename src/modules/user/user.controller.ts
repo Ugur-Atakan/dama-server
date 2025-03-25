@@ -4,16 +4,12 @@ import {
   Post,
   Request,
   HttpStatus,
-  UseInterceptors,
-  UploadedFile,
   Delete,
-  Get,
   HttpCode,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
   ChangeEmailDto,
-  ChangePasswordDto,
   UpdateUserDto,
 } from 'src/dtos/user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
