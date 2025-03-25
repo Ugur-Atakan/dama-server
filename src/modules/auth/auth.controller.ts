@@ -34,12 +34,14 @@ export class AuthController {
   ) {}
   
 
+  @Public()
   @Post('generate')
   async generateOTP(@Body('telephone') telephone: string) {
     const otp = await this.otpService.generateOTPToken(telephone);
     return { message: 'OTP oluşturuldu', otp };
   }
 
+  @Public()
   @Post('verify')
   async verifyOTP(@Body() body: { telephone: string; token: string }) {
     await this.otpService.verifyOTPToken(body.telephone, body.token);
