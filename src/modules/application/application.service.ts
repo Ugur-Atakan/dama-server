@@ -10,7 +10,20 @@ function generateApplicationNumber(): string {
 export class ApplicationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async updateApplicatorData(data: any) {
+
+  async getAllApplicators() {
+    return await this.prisma.applicator.findMany({
+      where: { status: 'APPLICATOR' },
+    });
+  }
+
+  async getClientApplicators() {
+    return await this.prisma.applicator.findMany({
+      where: { status: 'APPLICATOR' },
+    });
+  }
+
+  async updateApplicatorData(data: { id: string; firstName: string; lastName: string, email: string, birthDate: string }) {
     await this.prisma.applicator.update({
       where: { id: data.id },
       data,
@@ -22,17 +35,6 @@ export class ApplicationService {
     let applicator = await this.prisma.applicator.findUnique({
       where: { telephone },
     });
-
-    if (!applicator) {
-      // Eğer yoksa, minimal bilgileriyle yeni bir Applicator oluşturuyoruz.
-      applicator = await this.prisma.applicator.create({
-        data: {
-          telephone,
-          // Diğer alanlar varsa (örneğin name, email, birthDate) ekleyebilirsin.
-          status: 'APPLICATOR', // Varsayılan durum
-        },
-      });
-    }
 
     const applicationNumber = generateApplicationNumber();
 
@@ -49,6 +51,8 @@ export class ApplicationService {
 
     return newApplication;
   }
+
+
   async getAllApplications() {
     return await this.prisma.application.findMany({
       select: {
@@ -101,45 +105,55 @@ export class ApplicationService {
 
   async updatePreApplicationSection(
     applicationId: string,
-    section: string,
-    newData: any,
+    updateData: { section: string; step: number; data: any },
   ) {
     // Uygulamanın mevcut preApplicationData'sını getiriyoruz
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
     });
-
+  
     if (!application) {
       throw new NotFoundException('Application not found');
     }
-
-    // Varsayıyoruz ki preApplicationData JSONB sütunu olarak array şeklinde saklanıyor
-    const preApplicationData =
-      (application.preApplicationData as Array<{
-        section: string;
-        step: number;
-        data: any;
-      }>) || [];
-
-    // İlgili section'ı bulup, data'sını güncelliyoruz
-    const updatedPreApplicationData = preApplicationData.map((item) =>
-      item.section === section ? { ...item, data: newData } : item,
-    );
-
+  
+    // JSONB sütununun array olarak saklandığını varsayıyoruz
+    let preApplicationData = (application.preApplicationData as Array<{
+      section: string;
+      step: number;
+      data: any;
+    }>) || [];
+  
+    // Güncellenecek section'ı arıyoruz
+    const index = preApplicationData.findIndex(item => item.section === updateData.section);
+  
+    if (index >= 0) {
+      // Eğer bulunduysa, güncelliyoruz
+      preApplicationData[index].data = updateData.data;
+      // İsteğe bağlı: adım (step) bilgisini de güncelleyebilirsin:
+      preApplicationData[index].step = updateData.step;
+    } else {
+      // Eğer bulunamadıysa, yeni section öğesi ekliyoruz
+      preApplicationData.push({
+        section: updateData.section,
+        step: updateData.step,
+        data: updateData.data,
+      });
+    }
+  
     // Güncellenmiş array'i veritabanında update ediyoruz
     const updatedApplication = await this.prisma.application.update({
       where: { id: applicationId },
-      data: { preApplicationData: updatedPreApplicationData },
+      data: { preApplicationData },
     });
-
+  
     return updatedApplication;
   }
+  
 
 
   async updateApplicationSection(
     applicationId: string,
-    section: string,
-    newData: any,
+    updateData: { section: string; step: number; data: any },
   ) {
     // Uygulamanın mevcut applicationData'sını getiriyoruz
     const application = await this.prisma.application.findUnique({
@@ -150,23 +164,28 @@ export class ApplicationService {
       throw new NotFoundException('Application not found');
     }
   
-    // Varsayıyoruz ki applicationData JSONB sütunu olarak array şeklinde saklanıyor
-    const applicationData =
-      (application.applicationData as Array<{
-        section: string;
-        step: number;
-        data: any;
-      }>) || [];
+    let applicationData = (application.applicationData as Array<{
+      section: string;
+      step: number;
+      data: any;
+    }>) || [];
   
-    // İlgili section'ı bulup, data'sını güncelliyoruz
-    const updatedApplicationData = applicationData.map((item) =>
-      item.section === section ? { ...item, data: newData } : item,
-    );
+    const index = applicationData.findIndex(item => item.section === updateData.section);
   
-    // Güncellenmiş array'i veritabanında update ediyoruz
+    if (index >= 0) {
+      applicationData[index].data = updateData.data;
+      applicationData[index].step = updateData.step;
+    } else {
+      applicationData.push({
+        section: updateData.section,
+        step: updateData.step,
+        data: updateData.data,
+      });
+    }
+  
     const updatedApplication = await this.prisma.application.update({
       where: { id: applicationId },
-      data: { applicationData: updatedApplicationData },
+      data: { applicationData },
     });
   
     return updatedApplication;

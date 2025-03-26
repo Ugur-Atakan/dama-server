@@ -72,6 +72,12 @@ export class OTPService {
 
     // Doğrulama başarılı ise token'ı silebilirsin
     await this.prisma.oTPToken.delete({ where: { id: otpToken.id } });
+   const applicator= await this.prisma.applicator.create({
+      data: {
+        telephone,
+        status: 'APPLICATOR',
+      },
+    });
     return true;
   }
 }

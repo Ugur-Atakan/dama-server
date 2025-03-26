@@ -40,46 +40,6 @@ export class ApplicationController {
   }
 
   @Public()
-  @Put(':applicationId/pre-application/:section')
-  async updatePreApplicationSection(
-    @Param('applicationId') applicationId: string,
-    @Param('section') section: string,
-    @Body() body: { data: any },
-  ) {
-    try {
-      const updatedApplication =
-        await this.applicationService.updatePreApplicationSection(
-          applicationId,
-          section,
-          body.data,
-        );
-      return updatedApplication;
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @Public()
-  @Put(':applicationId/application/:section')
-  async updateApplicationSection(
-    @Param('applicationId') applicationId: string,
-    @Param('section') section: string,
-    @Body() body: { data: any },
-  ) {
-    try {
-      const updatedApplication =
-        await this.applicationService.updateApplicationSection(
-          applicationId,
-          section,
-          body.data,
-        );
-      return updatedApplication;
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @Public()
   @Post('create-application')
   async createApplicationAfterPhoneVerification(
     @Body('telephone') telephone: string,
@@ -90,10 +50,40 @@ export class ApplicationController {
       );
     return { message: 'Başvuru oluşturuldu', application: newApplication };
   }
+  
   @Public()
-  @Patch('update-applicator')
-  async updateApplicatorData(@Body() data: any) {
-    await this.applicationService.updateApplicatorData(data);
-    return { message: 'Applicator updated' };
+  @Put(':applicationId/pre-application')
+  async updatePreApplicationSection(
+    @Param('applicationId') applicationId: string,
+    @Body() body: { section: string; step: number; data: any },
+  ) {
+    try {
+      const updatedApplication = await this.applicationService.updatePreApplicationSection(
+        applicationId,
+        body,
+      );
+      return updatedApplication;
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
+
+  @Public()
+  @Put(':applicationId/application')
+  async updateApplicationSection(
+    @Param('applicationId') applicationId: string,
+    @Body() body: { section: string; step: number; data: any },
+  ) {
+    try {
+      const updatedApplication = await this.applicationService.updateApplicationSection(
+        applicationId,
+        body,
+      );
+      return updatedApplication;
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+
 }
