@@ -39,6 +39,21 @@ export class ApplicationController {
     }
   }
 
+
+
+  @Public()
+  @Get('applicator/:applicatorId/applications')
+  async getuserApplications(@Param('applicatorId') applicatorId: string) {
+    try {
+      const application =
+        await this.applicationService.getUserApplications(applicatorId);
+      return application;
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+
   @Public()
   @Post('create-application')
   async createApplicationAfterPhoneVerification(
@@ -50,7 +65,7 @@ export class ApplicationController {
       );
     return { message: 'Başvuru oluşturuldu', application: newApplication };
   }
-  
+
   @Public()
   @Put(':applicationId/pre-application')
   async updatePreApplicationSection(

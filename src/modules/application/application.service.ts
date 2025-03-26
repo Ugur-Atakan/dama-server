@@ -10,7 +10,6 @@ function generateApplicationNumber(): string {
 export class ApplicationService {
   constructor(private readonly prisma: PrismaService) {}
 
-
   async getAllApplicators() {
     return await this.prisma.applicator.findMany({
       where: { status: 'APPLICATOR' },
@@ -23,7 +22,13 @@ export class ApplicationService {
     });
   }
 
-  async updateApplicatorData(data: { id: string; firstName: string; lastName: string, email: string, birthDate: string }) {
+  async updateApplicatorData(data: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    birthDate: string;
+  }) {
     await this.prisma.applicator.update({
       where: { id: data.id },
       data,
@@ -51,7 +56,6 @@ export class ApplicationService {
 
     return newApplication;
   }
-
 
   async getAllApplications() {
     return await this.prisma.application.findMany({
@@ -103,6 +107,27 @@ export class ApplicationService {
     };
   }
 
+  async getUserApplications(applicatorId: string) {
+    // İlgili application'ı çekiyoruz.
+    const application = await this.prisma.application.findMany({
+      where: { applicatorId: applicatorId },
+      select: {
+        id: true,
+        applicationNumber: true,
+        preApplicationData: true,
+        applicationData: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+    // Front-end'e döneceğimiz response'a "forms" property'sini ekliyoruz.
+    return application;
+  }
+
   async updatePreApplicationSection(
     applicationId: string,
     updateData: { section: string; step: number; data: any },
@@ -111,21 +136,24 @@ export class ApplicationService {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
     });
-  
+
     if (!application) {
       throw new NotFoundException('Application not found');
     }
-  
+
     // JSONB sütununun array olarak saklandığını varsayıyoruz
-    let preApplicationData = (application.preApplicationData as Array<{
-      section: string;
-      step: number;
-      data: any;
-    }>) || [];
-  
+    let preApplicationData =
+      (application.preApplicationData as Array<{
+        section: string;
+        step: number;
+        data: any;
+      }>) || [];
+
     // Güncellenecek section'ı arıyoruz
-    const index = preApplicationData.findIndex(item => item.section === updateData.section);
-  
+    const index = preApplicationData.findIndex(
+      (item) => item.section === updateData.section,
+    );
+
     if (index >= 0) {
       // Eğer bulunduysa, güncelliyoruz
       preApplicationData[index].data = updateData.data;
@@ -139,17 +167,15 @@ export class ApplicationService {
         data: updateData.data,
       });
     }
-  
+
     // Güncellenmiş array'i veritabanında update ediyoruz
     const updatedApplication = await this.prisma.application.update({
       where: { id: applicationId },
       data: { preApplicationData },
     });
-  
+
     return updatedApplication;
   }
-  
-
 
   async updateApplicationSection(
     applicationId: string,
@@ -159,19 +185,22 @@ export class ApplicationService {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
     });
-  
+
     if (!application) {
       throw new NotFoundException('Application not found');
     }
-  
-    let applicationData = (application.applicationData as Array<{
-      section: string;
-      step: number;
-      data: any;
-    }>) || [];
-  
-    const index = applicationData.findIndex(item => item.section === updateData.section);
-  
+
+    let applicationData =
+      (application.applicationData as Array<{
+        section: string;
+        step: number;
+        data: any;
+      }>) || [];
+
+    const index = applicationData.findIndex(
+      (item) => item.section === updateData.section,
+    );
+
     if (index >= 0) {
       applicationData[index].data = updateData.data;
       applicationData[index].step = updateData.step;
@@ -182,13 +211,12 @@ export class ApplicationService {
         data: updateData.data,
       });
     }
-  
+
     const updatedApplication = await this.prisma.application.update({
       where: { id: applicationId },
       data: { applicationData },
     });
-  
+
     return updatedApplication;
   }
-  
 }
