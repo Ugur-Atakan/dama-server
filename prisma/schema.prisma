@@ -127,6 +127,7 @@ model OTPToken {
 enum ApplicationStatus {
   PRE_APPLICATION
   PENDING
+  USER_COMPLETED
   ACTIVE
   INACTIVE
   INPROGRESS
