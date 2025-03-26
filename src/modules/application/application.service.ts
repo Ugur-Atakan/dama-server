@@ -104,8 +104,7 @@ export class ApplicationService {
 
     // Front-end'e döneceğimiz response'a "forms" property'sini ekliyoruz.
     return {
-      ...application,
-      forms,
+      ...application
     };
   }
 
