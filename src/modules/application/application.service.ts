@@ -32,7 +32,7 @@ export class ApplicationService {
 
   async createApplicationForVerifiedPhone(telephone: string) {
     // İlgili telefonla kayıtlı bir Applicator var mı kontrol ediyoruz.
-    let applicator = await this.prisma.applicator.findUnique({
+    const applicator = await this.prisma.applicator.findUnique({
       where: { telephone },
     });
 
