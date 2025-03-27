@@ -6,6 +6,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events } from 'src/common/enums/event.enum';
 import { TokenService } from './token.service';
 import { ApplicationService } from '../application/application.service';
+import { UpdateApplicatorData } from 'src/dtos/applicator.dto';
 
 @Injectable()
 export class ApplicatorAuthService {
@@ -166,5 +167,13 @@ export class ApplicatorAuthService {
     }
     
     return applicator;
+  }
+
+
+  async updateApplicatorData(applicatorId: string, data: UpdateApplicatorData) {
+   return await this.prisma.applicator.update({
+      where: { id: applicatorId },
+      data:{...data}
+    });
   }
 }

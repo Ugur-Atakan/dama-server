@@ -13,9 +13,10 @@ import {
 
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
-import { Roles } from 'src/common/decorators/roles.decorator';
 import { ApplicationService } from '../application/application.service';
 import { Public } from 'src/common/decorators/public.decorator';
+import { ApplicatorAuthService } from '../auth/applicator-auth.service';
+import { UpdateApplicatorData } from 'src/dtos/applicator.dto';
 @ApiBearerAuth()
 @ApiTags('Admin Panel')
 @Controller('admin')
@@ -23,6 +24,7 @@ export class AdminMainController {
   constructor(
     private readonly adminService: AdminService,
     private readonly applicationService: ApplicationService,
+    private readonly applicatorAuthService: ApplicatorAuthService,
   ) {}
 
   @Public()
@@ -59,14 +61,9 @@ export class AdminMainController {
   async updateApplicatorData(
     @Param('id') id: string,
     @Body()
-    data: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      birthDate: string;
-    },
+    data: UpdateApplicatorData
   ) {
-    await this.applicationService.updateApplicatorData(id, data);
+    await this.applicatorAuthService.updateApplicatorData(id, data);
     return { message: 'Applicator updated' };
   }
 

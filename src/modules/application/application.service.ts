@@ -24,12 +24,7 @@ export class ApplicationService {
     });
   }
 
-  async updateApplicatorData(applicatorId: string, data: any) {
-    await this.prisma.applicator.update({
-      where: { id: applicatorId },
-      data:{...data}
-    });
-  }
+
 
   async getAllApplications() {
     return await this.prisma.application.findMany({
@@ -133,7 +128,7 @@ export class ApplicationService {
       throw new NotFoundException('Application not found');
     }
     console.log('gelen data:',updateData);
-    
+
     let applicationData =
       (application.applicationData as Array<{
         section: string;
