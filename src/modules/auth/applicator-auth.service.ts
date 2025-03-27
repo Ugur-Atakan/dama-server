@@ -5,6 +5,7 @@ import { OTPService } from './otp.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events } from 'src/common/enums/event.enum';
 import { TokenService } from './token.service';
+import { ApplicationService } from '../application/application.service';
 
 @Injectable()
 export class ApplicatorAuthService {
@@ -12,7 +13,7 @@ export class ApplicatorAuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly otpService: OTPService,
-    private readonly tokenService: TokenService,
+    private readonly applicationService: ApplicationService,
     private eventEmitter: EventEmitter2,
   ) {}
 
@@ -44,18 +45,10 @@ export class ApplicatorAuthService {
       const newApplicator = await this.prisma.applicator.create({
         data: {
           telephone,
-          status: 'WAITING_COMFIRMATION', // Or appropriate default status
         },
       });
       
-      await this.prisma.application.create({
-        data: {
-          applicatorId: newApplicator.id,
-          applicationNumber: `APP-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
-          status: 'PRE_APPLICATION',
-          preApplicationData: {}
-        }
-      });
+      this.applicationService.createApplication(newApplicator.id);
       // After creation, fetch with related data
       applicator = await this.prisma.applicator.findUnique({
         where: { id: newApplicator.id },

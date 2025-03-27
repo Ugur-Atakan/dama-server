@@ -14,7 +14,6 @@ export class ApplicatorJwtStrategy extends PassportStrategy(Strategy, 'applicato
   }
 
   async validate(payload: any) {
-    console.log('ApplicatorJwtStrategy payload', payload);
     // First check if this is an applicator token
     if (payload.type !== 'applicator') {
       throw new HttpException('Invalid token type', HttpStatus.FORBIDDEN);

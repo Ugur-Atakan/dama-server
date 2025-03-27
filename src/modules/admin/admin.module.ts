@@ -4,10 +4,11 @@ import { AdminService } from './admin.service';
 import { HttpModule } from '@nestjs/axios';
 import { AdminUserController } from './user/user.admin.controller';
 import { AdminMainController } from './admin.controller';
+import { ApplicationService } from '../application/application.service';
 
 @Module({
   imports: [HttpModule],
-  providers: [AdminService, UserService],
+  providers: [AdminService, UserService,ApplicationService],
 
   exports: [AdminService],
   controllers: [

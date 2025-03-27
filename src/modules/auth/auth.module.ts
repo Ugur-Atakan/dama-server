@@ -12,6 +12,7 @@ import { ApplicatorAuthService } from './applicator-auth.service';
 import { ApplicatorAuthController } from './applicator-auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ApplicatorJwtStrategy } from './strategies/applicator-jwt.strategy';
+import { ApplicationService } from '../application/application.service';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ApplicatorJwtStrategy } from './strategies/applicator-jwt.strategy';
     TokenService,
     ApplicatorJwtStrategy,
     JwtStrategy,
+    ApplicationService,
     EmailVerifyService,
     PasswordResetService,
     OTPService,

@@ -33,7 +33,7 @@ model Applicator {
   email        String?
   birthDate    DateTime?
   address      String?
-  status       ApplicatorStatus @default(WAITING_COMFIRMATION)
+  status       ApplicatorStatus @default(APPLICATOR)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   deletedAt    DateTime?
@@ -70,8 +70,7 @@ model ApplicationField {
 
 model Appointment {
   id              String            @id @default(uuid()) @db.Uuid
-  startTime       DateTime
-  endTime         DateTime
+  dateTime         DateTime
   status          AppointmentStatus @default(PENDING)
   notes           String?
   applicatorId    String?           @db.Uuid
@@ -138,21 +137,12 @@ enum ApplicationStatus {
   DOCTOR_PENDING
   DOCTOR_INPROGRESS
   DOCTOR_COMPLETED
+  APPOINTMENT_SCHEDULED
 }
 
 enum ApplicatorStatus {
-  WAITING_COMFIRMATION
   APPLICATOR
-  SCHEDULED
   CLIENT
-  ACTIVE
-  INPROGRESS
-  COMPLETED
-  DOCTOR_PENDING
-  DOCTOR_APPROVAL
-  DOCTOR_REJECTION
-  DOCTOR_INPROGRESS
-  DOCTOR_COMPLETED
 }
 
 enum RoleType {
@@ -177,7 +167,6 @@ enum AppointmentStatus {
   CANCELLED
   COMPLETED
 }
-
 
 enum AppointmentType {
   ONLINE
