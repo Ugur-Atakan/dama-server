@@ -3,9 +3,16 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Events } from 'src/common/enums/event.enum';
 import { PrismaService } from 'src/prisma.service';
 
-// Basit bir 4 haneli OTP üreten fonksiyon
+// Generate a 4-digit OTP
 function generateOTP(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+// Generate a unique application number
+function generateApplicationNumber(): string {
+  const timestamp = new Date().getTime().toString().slice(-8);
+  const random = Math.floor(1000 + Math.random() * 9000).toString();
+  return `APP-${timestamp}-${random}`;
 }
 
 @Injectable()
@@ -15,30 +22,30 @@ export class OTPService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  // Belirtilen telefon numarası için OTP token oluşturur
+  // Generate OTP token for the telephone number
   async generateOTPToken(telephone: string) {
     const now = new Date();
-    // Aynı telefon numarasıyla daha önce oluşturulmuş tokenı kontrol ediyoruz
+    // Check for existing token
     const existingOtp = await this.prisma.oTPToken.findUnique({
       where: { telephone },
     });
 
     if (existingOtp) {
-      // Eğer token süresi henüz dolmamışsa, yeni token oluşturmayı reddediyoruz
+      // If token is still valid, reject creating a new one
       if (existingOtp.expire > now) {
         throw new BadRequestException(
           'Önceden gönderilen OTP token hala geçerli, lütfen bekleyin.',
         );
       }
 
-      // Süresi dolmuşsa, önceki tokenı siliyoruz
+      // Delete expired token
       await this.prisma.oTPToken.delete({ where: { id: existingOtp.id } });
     }
 
-    // Yeni OTP token oluşturuyoruz
+    // Create new OTP token
     const token = generateOTP();
     const expireTime = new Date();
-    expireTime.setMinutes(expireTime.getMinutes() + 10); // OTP 10 dakika geçerli
+    expireTime.setMinutes(expireTime.getMinutes() + 10); // 10 minutes validity
 
     const otpToken = await this.prisma.oTPToken.create({
       data: {
@@ -48,13 +55,11 @@ export class OTPService {
       },
     });
 
-    this.eventEmitter.emit(Events.OTP_REQUESTED, { phone: telephone, code: token });
-
-    // SMS entegrasyonu burada eklenebilir
+    // SMS integration can be added here
     return otpToken;
   }
 
-  // Girilen token’ın doğruluğunu kontrol eder
+  // Verify OTP token and create/update applicator
   async verifyOTPToken(telephone: string, token: string): Promise<boolean> {
     const otpToken = await this.prisma.oTPToken.findUnique({
       where: { telephone },
@@ -70,14 +75,9 @@ export class OTPService {
       throw new BadRequestException('OTP token süresi dolmuş');
     }
 
-    // Doğrulama başarılı ise token'ı silebilirsin
+    // Delete the token once verified
     await this.prisma.oTPToken.delete({ where: { id: otpToken.id } });
-   const applicator= await this.prisma.applicator.create({
-      data: {
-        telephone,
-        status: 'APPLICATOR',
-      },
-    });
-    return true;
+
+  return true;
   }
 }

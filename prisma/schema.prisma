@@ -37,22 +37,21 @@ model Applicator {
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
   deletedAt    DateTime?
-  applications Application[]
+  application Application?
   appointments Appointment[]
 }
 
 model Application {
   id                 String            @id @default(uuid()) @db.Uuid
-  applicatorId       String?           @db.Uuid
+  applicatorId       String?           @unique @db.Uuid  // Made this unique to enforce one-to-one
   applicator         Applicator?       @relation(fields: [applicatorId], references: [id], onDelete: Cascade)
   status             ApplicationStatus @default(PENDING)
   applicationNumber  String            @unique
-  preApplicationData Json? // Pre-application form verileri (array şeklinde saklanabilir)
-  applicationData    Json? // Application form verileri (array şeklinde saklanabilir)
+  preApplicationData Json? // Pre-application form verileri
+  applicationData    Json? // Application form verileri
   createdAt          DateTime          @default(now())
   updatedAt          DateTime?         @updatedAt
   deletedAt          DateTime?
-  @@unique([applicatorId, id])
 }
 
 model PreApplicationField {

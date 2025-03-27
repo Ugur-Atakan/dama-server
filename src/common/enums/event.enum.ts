@@ -17,4 +17,8 @@ export enum Events {
     OTP_REQUESTED="otp.requested",
     OTP_VERIFIED="otp.verified",
     OTP_EXPIRED="otp.expired",
+    APPLICATOR_LOGIN="applicator.login",
+    APPLICATOR_LOGOUT="applicator.logout",
+    APPLICATOR_REGISTERED="applicator.registered",
+    APPLICATOR_DELETED="applicator.deleted",
   }

@@ -13,14 +13,14 @@ export class ApplicationService {
   async getAllApplicators() {
     return await this.prisma.applicator.findMany({
       where: { status: 'APPLICATOR' },
-      include: { applications: true,appointments: true }
+      include: {appointments: true }
     });
   }
 
   async getClientApplicators() {
     return await this.prisma.applicator.findMany({
       where: { status: 'APPLICATOR' },
-      include: { applications: true,appointments: true },
+      include: {appointments: true },
     });
   }
 

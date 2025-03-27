@@ -7,6 +7,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
+import { IS_APPLICATOR_ROUTE_KEY } from '../../../common/decorators/applicator-route.decorator';
 import { ROLES_KEY } from '../../../common/decorators/roles.decorator';
 import { Observable } from 'rxjs';
 import { Role } from '../../../common/enums/role.enum';
@@ -24,6 +25,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
+
+    // Applicator rotası kontrolü ekleyelim
+    const isApplicatorRoute = this.reflector.getAllAndOverride<boolean>(IS_APPLICATOR_ROUTE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Eğer applicator rotası ise bu guard'ı atlat
+    if (isApplicatorRoute) {
+      return true; // Guard'ı atlat, ApplicatorJwtAuthGuard bunu halledecek
+    }
 
     if (isPublic) {
       // Public endpoint'lerde bile token'ı kontrol etmek için devam ediyoruz
@@ -63,7 +75,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     });
   }
 
-  // Eğer public endpoint ise ve token varsa, onu parse etmeye çalışıyoruz
+  // Diğer metodlar aynı kalabilir...
+  // handleOptionalToken ve handleRequest metodları
+
   async handleOptionalToken(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
@@ -92,7 +106,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         context.getClass(),
       ]);
 
-      if (isPublic) {
+      // Applicator rotası kontrolü ekleyelim
+      const isApplicatorRoute = this.reflector.getAllAndOverride<boolean>(IS_APPLICATOR_ROUTE_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+
+      // Eğer public veya applicator rotası ise izin ver
+      if (isPublic || isApplicatorRoute) {
         return null;
       }
 
