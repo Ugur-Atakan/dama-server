@@ -11,6 +11,10 @@ export class WhatsAppService implements OnModuleInit {
   constructor(private eventEmitter: EventEmitter2) {
     this.client = new Client({
       authStrategy: new LocalAuth(),
+      puppeteer: {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      },
     });
   }
 
