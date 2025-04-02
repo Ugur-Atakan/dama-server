@@ -47,16 +47,13 @@ export class OTPService {
     const expireTime = new Date();
     expireTime.setMinutes(expireTime.getMinutes() + 10); // 10 minutes validity
 
-    const otpToken = await this.prisma.oTPToken.create({
-      data: {
-        telephone,
-        token,
-        expire: expireTime,
-      },
+    // Emit event for OTP generation
+    this.eventEmitter.emit(Events.OTP_REQUESTED, {
+      telephone,
+      code: token,
     });
-
     // SMS integration can be added here
-    return otpToken;
+    return 'OTP sent successfully';
   }
 
   // Verify OTP token and create/update applicator
