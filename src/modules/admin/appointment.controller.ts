@@ -7,7 +7,6 @@ import {
   Delete,
   ParseIntPipe,
 } from '@nestjs/common';
-import { AppointmentService } from './appointment.service';
 import { Appointment } from '@prisma/client';
 import { 
   CreateAppointmentDto, 
@@ -23,10 +22,11 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse
 } from '@nestjs/swagger';
+import { AppointmentService } from '../appointment/appointment.service';
 
 @ApiTags('Randevular')
-@Controller('appointments')
-export class AppointmentsController {
+@Controller('admin/appointments')
+export class AdminAppointmentsController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
   @Public()
@@ -37,6 +37,7 @@ export class AppointmentsController {
   })
   @ApiBadRequestResponse({ description: 'Geçersiz veri girişi' })
   create(@Body() createAppointmentDto: CreateAppointmentDto) {
+    console.log('Randevu oluşturuluyor:', createAppointmentDto);
     return this.appointmentService.create(createAppointmentDto);
   }
 

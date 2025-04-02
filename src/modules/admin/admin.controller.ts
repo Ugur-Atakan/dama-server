@@ -45,7 +45,27 @@ export class AdminMainController {
     }
   }
 
- @Public()
+  @Public()
+  @Get('application/:id')
+  async getApplication(@Param('id') id: string) {
+    return this.applicationService.findApplicator(id);
+  }
+
+  @Public()
+  @Patch('applicator/:id/set-as-client')
+  async setAsClient(@Param('id') id: string) {
+    return this.applicationService.setAsClient(id);
+  }
+
+
+  @Public()
+  @Delete('application/:id')
+  async deleteApplication(@Param('id') id: string) {
+    return this.applicationService.deleteApplicator(id);
+  }
+
+
+  @Public()
   @Get('clients')
   async getAllClients() {
     try {
@@ -61,7 +81,7 @@ export class AdminMainController {
   async updateApplicatorData(
     @Param('id') id: string,
     @Body()
-    data: UpdateApplicatorData
+    data: UpdateApplicatorData,
   ) {
     await this.applicatorAuthService.updateApplicatorData(id, data);
     return { message: 'Applicator updated' };
@@ -77,5 +97,4 @@ export class AdminMainController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
 }

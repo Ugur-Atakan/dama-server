@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   ApplicationStatus,
+  ApplicatorStatus,
   Appointment,
   AppointmentStatus,
 } from '@prisma/client';
@@ -39,8 +40,16 @@ export class AppointmentService {
             status: ApplicationStatus.APPOINTMENT_SCHEDULED,
           },
         });
+
+        const updatedApplicator = await tx.applicator.update({
+          where: { id: createAppointmentDto.applicatorId },
+          data: {
+            status: ApplicatorStatus.APPOINTMENT_SCHEDULED,
+          },
+        });
         
-        return { appointment, application: updatedApplication };
+        
+        return { appointment, application: updatedApplication, applicator: updatedApplicator };
       });
       
       return result;

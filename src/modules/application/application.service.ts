@@ -1,5 +1,7 @@
 import { PrismaService } from 'src/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { stat } from 'fs';
+import e, { application } from 'express';
 
 function generateApplicationNumber(): string {
   const randomNumber = Math.floor(10000000 + Math.random() * 900000).toString();
@@ -11,10 +13,67 @@ export class ApplicationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAllApplicators() {
-    return await this.prisma.applicator.findMany({
-      where: { status: 'APPLICATOR' },
+    const applicators= await this.prisma.applicator.findMany({
+      where: {
+        status: { in: ['APPLICATOR', 'APPOINTMENT_SCHEDULED'] },
+        deletedAt: null,
+      },
+      include: { appointments: true, application:{
+        select: {
+        status: true,
+        id: true,
+        applicationNumber: true,
+        createdAt: true,
+        updatedAt: true,
+      }, },
+    },
+    });
+    console.log('applicators:',applicators);
+    return applicators.map((applicator) => ({
+        applicatorId: applicator.id,
+        firstName: applicator.firstName,
+        lastName: applicator.lastName,
+        status: applicator.status,
+        email: applicator.email,
+        telephone: applicator.telephone,
+        applicationStatus: applicator.application.status,
+        applicationNumber: applicator.application.applicationNumber,
+        createdAt: applicator.application.createdAt,
+        updatedAt: applicator.application.updatedAt,
+        appointments: applicator.appointments,
+      }));  
+  
+}
+
+  async findApplicator(id: string) {
+   const applicator=await this.prisma.applicator.findUnique({
+      where: { id: id },
       include: { appointments: true, application: true },
     });
+    if (!applicator) {
+      throw new NotFoundException('Applicator not found');
+    }
+    return {
+      applicatorId:applicator.id,
+      applicationNumber:applicator.application.applicationNumber,
+      createdAt:applicator.application.createdAt,
+      updatedAt:applicator.application.updatedAt,
+      appointments:applicator.appointments,
+      preApplicationData:applicator.application.preApplicationData,
+      applicationData:applicator.application.applicationData,
+    };
+  } 
+
+
+  async deleteApplicator(id: string) {
+    const application= await this.prisma.applicator.update({
+      where: { id: id },
+      data: { deletedAt: new Date() },
+    });
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+    return 'Application deleted successfully';
   }
 
   async getAllClients() {
@@ -24,6 +83,17 @@ export class ApplicationService {
     });
   }
 
+
+  async setAsClient(id: string) { 
+    const applicator = await this.prisma.applicator.update({
+      where: { id: id },
+      data: { status: 'CLIENT' },
+    });
+    if (!applicator) {
+      throw new NotFoundException('Applicator not found');
+    }
+    return applicator;
+  }
 
 
   async getAllApplications() {
@@ -174,11 +244,50 @@ export class ApplicationService {
           { section: 'payment', step: 6, data: {} },
         ],
         applicationData: [
-          { section: 'marital', step: 1, data: {} },
-          { section: 'employment', step: 2, data: {} },
-          { section: 'workConditions', step: 3, data: {} },
-          { section: 'postEmployment', step: 4, datat: {} },
-          { section: 'evidenceWitness', step: 5, data: {} },
+          { section: 'marital', step: 1, data: {
+            maritalStatus: null,
+            spouseName: null,
+            hasChildren: null,
+            children:[{
+              name: null,
+              birthDate: null,
+            }],
+
+          } },
+          { section: 'employment', step: 2, data: {
+            employerName: null,
+            position: null,
+            salary: null,
+            startDate: null,
+            hasContract: null,
+            contractFile: null,
+
+          } },
+          { section: 'workConditions', step: 3, data: {
+            bases: null,
+            dailyHours: null,
+            weeklyDays: null,
+            lastWorkDate: null,
+            supervisorName: null,
+
+          } },
+          { section: 'postEmployment', step: 4, data: {
+            currentCompany: null,
+            currentSalary: null,
+            previousJobs: [{
+              company: null,
+              startDate: null,
+              endDate: null,
+          }],
+         }},
+          { section: 'evidenceWitness', step: 5, data: {
+            hasWitnesses: null,
+            witnesses: [{
+              firstName: null,
+              lastName: null,
+            }],
+            evidenceLinks: [],
+          } },
         ],
       },
     });

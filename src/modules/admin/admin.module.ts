@@ -8,15 +8,18 @@ import { ApplicationService } from '../application/application.service';
 import { ApplicatorAuthService } from '../auth/applicator-auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { OTPService } from '../auth/otp.service';
+import { AppointmentModule } from '../appointment/appointment.module';
+import { AdminAppointmentsController } from './appointment.controller';
 
 @Module({
   imports: [HttpModule],
-  providers: [AdminService, UserService,ApplicationService,ApplicatorAuthService,JwtService,OTPService],
+  providers: [AdminService, UserService,ApplicationService,ApplicatorAuthService,JwtService,OTPService,AppointmentModule],
 
   exports: [AdminService],
   controllers: [
     AdminUserController,
     AdminMainController,
+    AdminAppointmentsController,
   ],
 })
 export class AdminModule {}

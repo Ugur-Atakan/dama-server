@@ -141,6 +141,7 @@ enum ApplicationStatus {
 }
 
 enum ApplicatorStatus {
+  APPOINTMENT_SCHEDULED
   APPLICATOR
   CLIENT
 }
