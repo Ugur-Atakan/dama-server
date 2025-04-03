@@ -24,9 +24,11 @@ export class NotificationListener implements OnModuleInit {
   @OnEvent(Events.OTP_REQUESTED)
   async sendOTP(payload: { telephone: string; code: string }) {
     this.logger.log(`📧 OTP kodu gönderiliyor ${payload.telephone}`)
+    const sanitizedNumber = payload.telephone.replace(/\D/g, '');
+
       await firstValueFrom(
     this.httpService.post(process.env.WHATSAPP_URL, {
-      number: payload.telephone,
+      number: sanitizedNumber,
       message: `Merhaba, OTP kodunuz: ${payload.code}`,
     }));
     this.logger.log(`📧 OTP kodu gönderildi ${payload.telephone}`);
