@@ -1,11 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import { MailService } from './mail.service';
 import { NotificationListener } from './notification.listener';
-import { WhatsAppService } from '../whatsapp/whatsapp.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Global()
 @Module({
-  providers: [MailService,NotificationListener,WhatsAppService],
+  imports: [HttpModule],
+  providers: [MailService,NotificationListener],
   exports: [MailService],
 })
 export class MailModule {}

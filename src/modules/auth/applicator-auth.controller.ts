@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApplicatorAuthService } from './applicator-auth.service';
 import { Public } from 'src/common/decorators/public.decorator';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { ApplicatorJwtAuthGuard } from './guards/applicator-jwt-auth.guard';
 import { GetApplicator } from 'src/common/decorators/applicator.decorator';
 import { IsString } from 'class-validator';
@@ -22,13 +22,16 @@ import { UpdateApplicatorData } from 'src/dtos/applicator.dto';
 
 // Create DTOs for applicator authentication
 class VerifyOTPDto {
+  @ApiProperty({example: '905555555555', description: 'The phone of the user',})
   @IsString()
   telephone: string;
+  @ApiProperty({example: '4212', description: 'The token of the user',})
   @IsString()
   token: string;
 }
 
 class GenerateOTPDto {
+  @ApiProperty({example: '905555555555', description: 'The phone of the user',})
   @IsString()
   telephone: string;
 }

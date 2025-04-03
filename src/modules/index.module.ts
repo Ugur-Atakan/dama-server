@@ -10,8 +10,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CaslModule } from 'src/authorization/casl/casl.module';
 import { AppointmentModule } from './appointment/appointment.module';
 import { ApplicationModule } from './application/application.module';
-import { WhatsAppModule } from './whatsapp/whatsapp.module';
-
 
 @Module({
   imports: [
@@ -26,7 +24,6 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     MailModule,
     AdminModule,
     HttpModule,
-    WhatsAppModule
   ],
   exports: [
     AuthModule,
@@ -34,7 +31,6 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     FileManagerModule,
     MailModule,
     AdminModule,
-    WhatsAppModule,
   ],
 })
 export class MainModule {}
